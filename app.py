@@ -1,4 +1,4 @@
-import flask, json, queue
+import flask, json, queue, sqlite3, os, hashlib
 from datetime import datetime
 
 app = flask.Flask(__name__)
@@ -7,9 +7,69 @@ app = flask.Flask(__name__)
 def index():
     return flask.render_template('auth.html')
 
+
 @app.route('/login',methods=['POST'])
 def login():
-    return flask.request.form['uname']+" " +flask.request.form['psw']
+    return flask.request.form['uname'] + " " + flask.request.form['psw']
+
+
+@app.route('/add_user', methods=['POST'])
+def add_user():
+	form = flask.request.form
+	identifiant = form["uname"]
+	entreprise = form["entreprise"]
+	sec_dep = form["section"]
+	poste = form["poste"]
+
+	salt = os.urandom(32)
+	key = hashlib.pbkdf2_hmac('sha256', form["psw"].encode('utf-8'), salt, 100000, dklen=128)
+	hash_mdp = salt + key
+
+	conn = sqlite3.connect('profils_utilisateurs.db')
+    conn.text_factory = str
+    cur = conn.cursor()
+    print("Connexion réussie à SQLite")
+
+    cur.execute('''INSERT INTO utilisateurs
+                (identifiant, hash_mdp, entreprise, section_departement, poste_tenu) VALUES (?, ?, ?, ?, ?)''',\
+                (identifiant, hash_mdp, entreprise, sec_dep, poste))
+
+    # Fermeture de la base de données
+    cur.close()
+    conn.commit()
+    print("Utilisateur inséré avec succès")
+    conn.close()
+    print("Connexion SQlite fermée")
+
+    return flask.render_template('admin.html')
+
+
+@app.route('/add_device', methods=['POST'])
+def add_device():
+	form = flask.request.form
+	entreprise = form["entreprise"]
+	sec_dep = form["section"]
+	appareil = form["appareil"]
+	variable = form["variable"]
+
+	conn = sqlite3.connect('profils_utilisateurs.db')
+    conn.text_factory = str
+    cur = conn.cursor()
+    print("Connexion réussie à SQLite")
+
+    cur.execute('''INSERT INTO appareils
+                (entreprise, section_departement, appareil, variable_mesuree) VALUES (?, ?, ?, ?)''',\
+                (entreprise, sec_dep, appareil, variable))
+
+    # Fermeture de la base de données
+    cur.close()
+    conn.commit()
+    print("Appareil inséré avec succès")
+    conn.close()
+    print("Connexion SQlite fermée")
+
+	return flask.render_template('admin.html')
+
 
 class MessageAnnouncer:
 
@@ -52,6 +112,8 @@ def get_values(input_data):
 		filename = input_data
 		with open(filename, 'r') as file :
 			lines = file.readlines()
+			if len(lines) <= 2 :
+				data = lines[1].split()[2]
 			header = lines[0]
 			mesured_var = header.split()[1]
 #			print(mesured_var)
