@@ -7,6 +7,10 @@ app = flask.Flask(__name__)
 def index():
     return flask.render_template('auth.html')
 
+@app.route('/login',methods=['POST'])
+def login():
+    return flask.request.form['uname']+" " +flask.request.form['psw']
+
 class MessageAnnouncer:
 
     def __init__(self):
