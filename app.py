@@ -4,8 +4,18 @@ import os
 import queue
 import secrets
 import sqlite3
-from flask import flash, Flask, jsonify, redirect, render_template, request, Response, url_for
 from datetime import datetime
+
+from flask import (
+    Flask,
+    Response,
+    flash,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    url_for,
+)
 
 app = Flask(__name__)
 
@@ -26,7 +36,7 @@ def admin():
 @app.route("/login", methods=["GET", "POST"])
 def login():
 
-   # Récupération des valeurs entrées sur le formlaire
+    # Récupération des valeurs entrées sur le formlaire
 
     login_form = request.form
     identifiant = login_form["uname"]
@@ -40,14 +50,18 @@ def login():
 
     # Récupération du hash_mdp dans la base de données à partir de l'identifiant
 
-    cur.execute("SELECT hash_mdp FROM utilisateurs WHERE identifiant = ?", (identifiant,))
+    cur.execute(
+        "SELECT hash_mdp FROM utilisateurs WHERE identifiant = ?", (identifiant,)
+    )
     res = cur.fetchall()
 
     # Si l'identifiant n'est pas dans la base de données
 
     if len(res) == 0:
-        flash("Cet identifiant n'existe pas dans la base de données. Revenez à la page précédente.")
-        return render_template('authFailed.html')
+        flash(
+            "Cet identifiant n'existe pas dans la base de données. Revenez à la page précédente."
+        )
+        return render_template("authFailed.html")
 
     # Si l'identifiant est dans la base de données
 
@@ -63,20 +77,22 @@ def login():
     # Récupération du salt et calcul du hash avec le salt et le mdp entré apr l'utilisateur
 
     salt = hash_mdp[:32]
-    key = hashlib.pbkdf2_hmac("sha256", input_mdp.encode("utf-8"), salt, 100000, dklen=128)
+    key = hashlib.pbkdf2_hmac(
+        "sha256", input_mdp.encode("utf-8"), salt, 100000, dklen=128
+    )
 
     # Si le mot de passe est incorrect
 
     if hash_mdp[32:] != key:
         flash("Le mot de passe est incorrect. Revenez à la page précédente.")
-        return render_template('authFailed.html')
+        return render_template("authFailed.html")
 
     return "Site en cours de construction..."
 
 
 @app.route("/add_user", methods=["POST"])
 def add_user():
-    '''Fonction pour ajouter un utilisateur dans la base de données'''
+    """Fonction pour ajouter un utilisateur dans la base de données"""
 
     # Récupération des valeurs entrées sur le formulaire
 
@@ -89,7 +105,9 @@ def add_user():
     # Création du hash du mot de passe et du salt associé
 
     salt = os.urandom(32)
-    key = hashlib.pbkdf2_hmac("sha256", user_form["psw"].encode("utf-8"), salt, 100000, dklen=128)
+    key = hashlib.pbkdf2_hmac(
+        "sha256", user_form["psw"].encode("utf-8"), salt, 100000, dklen=128
+    )
     hash_mdp = salt + key
 
     # Connexion à la base de données
@@ -98,21 +116,12 @@ def add_user():
     cur = conn.cursor()
     print("Connexion réussie à SQLite")
 
-    # Création de la table utilisateurs si elle n'existe pas
-
-    cur.execute('''CREATE TABLE IF NOT EXISTS utilisateurs
-                (identifiant TEXT PRIMARY KEY,
-                hash_mdp TEXT,
-                entreprise TEXT,
-                section_departement TEXT,
-                poste_tenu TEXT)''')
-
     # Insertion d'un nouvel utilisateur dans la base de données
 
     cur.execute(
         """INSERT INTO utilisateurs
                 (identifiant, hash_mdp, entreprise, section_departement, poste_tenu) VALUES (?, ?, ?, ?, ?)""",
-        (identifiant, hash_mdp, entreprise, sec_dep, poste)
+        (identifiant, hash_mdp, entreprise, sec_dep, poste),
     )
 
     # Fermeture de la base de données
@@ -128,7 +137,7 @@ def add_user():
 
 @app.route("/add_device", methods=["POST"])
 def add_device():
-    '''Fonction pour ajouter un appareil dans la base de données'''
+    """Fonction pour ajouter un appareil dans la base de données"""
 
     # Récupération des valeurs entrées sur le formulaire
 
@@ -144,20 +153,12 @@ def add_device():
     cur = conn.cursor()
     print("Connexion réussie à SQLite")
 
-    # Création de la table appareils si elle n'existe pas
-
-    cur.execute('''CREATE TABLE IF NOT EXISTS appareils
-                (entreprise TEXT,
-                section_departement TEXT,
-                appareil TEXT PRIMARY KEY,
-                variable_mesuree TEXT)''')
-
     # Insertion d'un nouvel appareil dans la base de données
 
     cur.execute(
         """INSERT INTO appareils
                 (entreprise, section_departement, appareil, variable_mesuree) VALUES (?, ?, ?, ?)""",
-        (entreprise, sec_dep, appareil, variable)
+        (entreprise, sec_dep, appareil, variable),
     )
 
     # Fermeture de la base de données
@@ -200,7 +201,7 @@ def format_sse(data: str, event=None) -> str:
     return msg
 
 
-@app.route("/input_data/<input_data>", methods=['GET'])
+@app.route("/input_data/<input_data>", methods=["GET"])
 def get_values(input_data):
     input_data = str(input_data)
     input_var_elem = input_data.rsplit(".", 1)
