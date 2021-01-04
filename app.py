@@ -2,86 +2,173 @@ import hashlib
 import json
 import os
 import queue
+import secrets
 import sqlite3
+from flask import flash, Flask, jsonify, redirect, render_template, request, Response, url_for
 from datetime import datetime
 
-import flask
+app = Flask(__name__)
 
-app = flask.Flask(__name__)
+secret = secrets.token_urlsafe(32)
+app.secret_key = secret
 
 
 @app.route("/")
 def index():
-    return flask.render_template("auth.html")
+    return render_template("auth.html")
 
 
 @app.route("/admin")
 def admin():
-    return flask.render_template("admin.html")
+    return render_template("admin.html")
 
 
-@app.route("/login", methods=["POST"])
+@app.route("/login", methods=["GET", "POST"])
 def login():
-    return flask.request.form["uname"] + " " + flask.request.form["psw"]
 
+   # Récupération des valeurs entrées sur le formlaire
 
-@app.route("/add_user", methods=["POST"])
-def add_user():
-    form = flask.request.form
-    identifiant = form["uname"]
-    entreprise = form["entreprise"]
-    sec_dep = form["section"]
-    poste = form["poste"]
+    login_form = request.form
+    identifiant = login_form["uname"]
+    input_mdp = login_form["psw"]
 
-    salt = os.urandom(32)
-    key = hashlib.pbkdf2_hmac(
-        "sha256", form["psw"].encode("utf-8"), salt, 100000, dklen=128
-    )
-    hash_mdp = salt + key
+    # Connexion à la base de données
 
     conn = sqlite3.connect("profils_utilisateurs.db")
     cur = conn.cursor()
     print("Connexion réussie à SQLite")
 
+    # Récupération du hash_mdp dans la base de données à partir de l'identifiant
+
+    cur.execute("SELECT hash_mdp FROM utilisateurs WHERE identifiant = ?", (identifiant,))
+    res = cur.fetchall()
+
+    # Si l'identifiant n'est pas dans la base de données
+
+    if len(res) == 0:
+        flash("Cet identifiant n'existe pas dans la base de données. Revenez à la page précédente.")
+        return render_template('authFailed.html')
+
+    # Si l'identifiant est dans la base de données
+
+    hash_mdp = res[0][0]
+    print("Hash récupéré")
+
+    # Fermeture de la base de données
+
+    cur.close()
+    conn.close()
+    print("Connexion SQlite fermée")
+
+    # Récupération du salt et calcul du hash avec le salt et le mdp entré apr l'utilisateur
+
+    salt = hash_mdp[:32]
+    key = hashlib.pbkdf2_hmac("sha256", input_mdp.encode("utf-8"), salt, 100000, dklen=128)
+
+    # Si le mot de passe est incorrect
+
+    if hash_mdp[32:] != key:
+        flash("Le mot de passe est incorrect. Revenez à la page précédente.")
+        return render_template('authFailed.html')
+
+    return "Site en cours de construction..."
+
+
+@app.route("/add_user", methods=["POST"])
+def add_user():
+    '''Fonction pour ajouter un utilisateur dans la base de données'''
+
+    # Récupération des valeurs entrées sur le formulaire
+
+    user_form = request.form
+    identifiant = user_form["uname"]
+    entreprise = user_form["entreprise"]
+    sec_dep = user_form["section"]
+    poste = user_form["poste"]
+
+    # Création du hash du mot de passe et du salt associé
+
+    salt = os.urandom(32)
+    key = hashlib.pbkdf2_hmac("sha256", user_form["psw"].encode("utf-8"), salt, 100000, dklen=128)
+    hash_mdp = salt + key
+
+    # Connexion à la base de données
+
+    conn = sqlite3.connect("profils_utilisateurs.db")
+    cur = conn.cursor()
+    print("Connexion réussie à SQLite")
+
+    # Création de la table utilisateurs si elle n'existe pas
+
+    cur.execute('''CREATE TABLE IF NOT EXISTS utilisateurs
+                (identifiant TEXT PRIMARY KEY,
+                hash_mdp TEXT,
+                entreprise TEXT,
+                section_departement TEXT,
+                poste_tenu TEXT)''')
+
+    # Insertion d'un nouvel utilisateur dans la base de données
+
     cur.execute(
         """INSERT INTO utilisateurs
                 (identifiant, hash_mdp, entreprise, section_departement, poste_tenu) VALUES (?, ?, ?, ?, ?)""",
-        (identifiant, hash_mdp, entreprise, sec_dep, poste),
+        (identifiant, hash_mdp, entreprise, sec_dep, poste)
     )
 
     # Fermeture de la base de données
+
     cur.close()
     conn.commit()
     print("Utilisateur inséré avec succès")
     conn.close()
     print("Connexion SQlite fermée")
-    return flask.render_template("admin.html")
+
+    return render_template("admin.html")
 
 
 @app.route("/add_device", methods=["POST"])
 def add_device():
-    form = flask.request.form
-    entreprise = form["entreprise"]
-    sec_dep = form["section"]
-    appareil = form["appareil"]
-    variable = form["variable"]
+    '''Fonction pour ajouter un appareil dans la base de données'''
+
+    # Récupération des valeurs entrées sur le formulaire
+
+    device_form = request.form
+    entreprise = device_form["entreprise"]
+    sec_dep = device_form["section"]
+    appareil = device_form["appareil"]
+    variable = device_form["variable"]
+
+    # Connexion à la base de données
 
     conn = sqlite3.connect("profils_utilisateurs.db")
     cur = conn.cursor()
     print("Connexion réussie à SQLite")
+
+    # Création de la table appareils si elle n'existe pas
+
+    cur.execute('''CREATE TABLE IF NOT EXISTS appareils
+                (entreprise TEXT,
+                section_departement TEXT,
+                appareil TEXT PRIMARY KEY,
+                variable_mesuree TEXT)''')
+
+    # Insertion d'un nouvel appareil dans la base de données
+
     cur.execute(
         """INSERT INTO appareils
                 (entreprise, section_departement, appareil, variable_mesuree) VALUES (?, ?, ?, ?)""",
-        (entreprise, sec_dep, appareil, variable),
+        (entreprise, sec_dep, appareil, variable)
     )
 
     # Fermeture de la base de données
+
     cur.close()
     conn.commit()
     print("Appareil inséré avec succès")
     conn.close()
     print("Connexion SQlite fermée")
-    return flask.render_template("admin.html")
+
+    return render_template("admin.html")
 
 
 class MessageAnnouncer:
@@ -113,7 +200,7 @@ def format_sse(data: str, event=None) -> str:
     return msg
 
 
-@app.route("/input_data/<input_data>")
+@app.route("/input_data/<input_data>", methods=['GET'])
 def get_values(input_data):
     input_data = str(input_data)
     input_var_elem = input_data.rsplit(".", 1)
@@ -147,7 +234,7 @@ def get_values(input_data):
         file.close()
         msg = format_sse(data=data)
         announcer.announce(msg=msg)
-    return flask.jsonify({"Status": "On progress..."}), 200
+    return jsonify({"Status": "On progress..."}), 200
 
 
 @app.route("/listen", methods=["GET"])
@@ -158,4 +245,4 @@ def listen():
             msg = messages.get()  # blocks until a new message arrives
             yield msg
 
-    return flask.Response(stream(), mimetype="text/event-stream")
+    return Response(stream(), mimetype="text/event-stream")
