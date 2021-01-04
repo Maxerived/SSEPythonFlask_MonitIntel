@@ -15,7 +15,7 @@ app.secret_key = secret
 
 @app.route("/")
 def index():
-    return render_template("auth.html")
+    return render_template("login.html")
 
 
 @app.route("/admin")
@@ -23,7 +23,7 @@ def admin():
     return render_template("admin.html")
 
 
-@app.route("/login", methods=["GET", "POST"])
+@app.route("/login", methods=["POST"])
 def login():
 
    # Récupération des valeurs entrées sur le formlaire
@@ -46,8 +46,8 @@ def login():
     # Si l'identifiant n'est pas dans la base de données
 
     if len(res) == 0:
-        flash("Cet identifiant n'existe pas dans la base de données. Revenez à la page précédente.")
-        return render_template('authFailed.html')
+        error = "Cet identifiant n'existe pas dans la base de données."
+        return render_template("login.html", error=error)
 
     # Si l'identifiant est dans la base de données
 
@@ -68,8 +68,8 @@ def login():
     # Si le mot de passe est incorrect
 
     if hash_mdp[32:] != key:
-        flash("Le mot de passe est incorrect. Revenez à la page précédente.")
-        return render_template('authFailed.html')
+        error = "Le mot de passe est incorrect."
+        return render_template("login.html", error=error)
 
     return "Site en cours de construction..."
 
