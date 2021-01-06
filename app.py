@@ -1,5 +1,6 @@
+"""Fichier principal"""
+
 import hashlib
-import json
 import os
 import queue
 import secrets
@@ -9,7 +10,6 @@ from flask import (
     escape,
     Flask,
     Response,
-    flash,
     jsonify,
     redirect,
     render_template,
@@ -23,9 +23,6 @@ app = Flask(__name__)
 secret = secrets.token_urlsafe(32)
 app.secret_key = secret
 
-if __name__ == '__main__':
-    app.run()
-
 
 @app.route("/")
 def index():
@@ -33,7 +30,7 @@ def index():
     if session.get('username') == 'admin':
         return redirect(url_for('admin'))
 
-    if session.get('username') != None:
+    if session.get('username') is not None:
         return '''
             <p>Logged in as %s<p>
             <button onclick="window.location.href='/logout';">Logout</button>
@@ -121,7 +118,6 @@ def login():
         print("Mot de passe correct")
         error = "Vous êtes authentifié."
         session['username'] = identifiant
-#        session['logged_in'] = True
 
         # Si l'utilisateur est admin
 
@@ -138,7 +134,6 @@ def login():
 @app.route('/logout')
 def logout():
     session.pop('username', None)
-#    session.pop('logged_in', None)
     return redirect(url_for('login'))
 
 
@@ -150,8 +145,9 @@ def add_user():
 
     user_form = request.form
     identifiant = user_form["uname"]
-    entreprise = user_form["entreprise"]
-    sec_dep = user_form["section"]
+    site = user_form["site"]
+    chaine = user_form["chaine"]
+    ligne = user_form["ligne"]
     poste = user_form["poste"]
 
     # Création du hash du mot de passe et du salt associé
@@ -172,8 +168,13 @@ def add_user():
 
     cur.execute(
         """INSERT INTO utilisateurs
-                (identifiant, hash_mdp, entreprise, section_departement, poste_tenu) VALUES (?, ?, ?, ?, ?)""",
-        (identifiant, hash_mdp, entreprise, sec_dep, poste),
+                (identifiant,
+                hash_mdp,
+                site,
+                chaine_service,
+                ligne_de_production,
+                poste_tenu) VALUES (?, ?, ?, ?, ?, ?)""",
+        (identifiant, hash_mdp, site, chaine, ligne, poste)
     )
 
     # Fermeture de la base de données
@@ -196,10 +197,11 @@ def add_device():
     # Récupération des valeurs entrées sur le formulaire
 
     device_form = request.form
-    entreprise = device_form["entreprise"]
-    sec_dep = device_form["section"]
     appareil = device_form["appareil"]
-    variable = device_form["variable"]
+    type_a = device_form["type"]
+    site = device_form["site"]
+    chaine = device_form["chaine"]
+    ligne = device_form["ligne"]
 
     # Connexion à la base de données
 
@@ -211,8 +213,12 @@ def add_device():
 
     cur.execute(
         """INSERT INTO appareils
-                (entreprise, section_departement, appareil, variable_mesuree) VALUES (?, ?, ?, ?)""",
-        (entreprise, sec_dep, appareil, variable),
+                (appareil,
+                type,
+                site_de_production,
+                chaine_de_production,
+                ligne_de_production) VALUES (?, ?, ?, ?, ?)""",
+        (appareil, type_a, site, chaine, ligne)
     )
 
     # Fermeture de la base de données
@@ -261,7 +267,7 @@ def format_sse(data: str, event=None) -> str:
 def get_values(input_data):
     input_data = str(input_data)
     input_var_elem = input_data.rsplit(".", 1)
-    var = input_var_elem[0]
+#    var = input_var_elem[0]
     if len(input_var_elem) > 1:
         extension = input_data.rsplit(".", 1)[1].lower()
         if extension not in {"csv", "tsv"}:
@@ -272,8 +278,8 @@ def get_values(input_data):
             if len(lines) <= 2:
                 data = lines[1].split()[2]
             header = lines[0]
-            mesured_var = header.split()[1]
-            # 			print(mesured_var)
+#            mesured_var = header.split()[1]
+#             			print(mesured_var)
             filestart_time = datetime.strptime(
                 " ".join(lines[1].split()[:2]), "%Y-%m-%d %H:%M:%S.%f"
             )
@@ -311,4 +317,3 @@ def listen():
 
 if __name__ == '__main__':
     app.run()
-
