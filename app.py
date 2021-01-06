@@ -5,8 +5,8 @@ import queue
 import secrets
 import sqlite3
 from datetime import datetime
-
 from flask import (
+    escape,
     Flask,
     Response,
     flash,
@@ -14,6 +14,7 @@ from flask import (
     redirect,
     render_template,
     request,
+    session,
     url_for,
 )
 
@@ -25,69 +26,97 @@ app.secret_key = secret
 
 @app.route("/")
 def index():
-    return render_template("auth.html")
+    if 'username' in session:
+        if session['username'] == 'admin':
+            return redirect(url_for('admin'))
+        return 'Logged in as %s' % escape(session['username'])
+    return redirect(url_for('login'))
 
 
 @app.route("/admin")
 def admin():
-    return render_template("admin.html")
+    if 'username' in session:
+        return render_template('admin.html')
+    return redirect(url_for('login'))
 
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
 
-    # Récupération des valeurs entrées sur le formlaire
+    if request.method == 'POST':
 
-    login_form = request.form
-    identifiant = login_form["uname"]
-    input_mdp = login_form["psw"]
+        # Récupération des valeurs entrées sur le formlaire
 
-    # Connexion à la base de données
+        auth_form = request.form
+        identifiant = auth_form["uname"]
+        input_mdp = auth_form["psw"]
 
-    conn = sqlite3.connect("profils_utilisateurs.db")
-    cur = conn.cursor()
-    print("Connexion réussie à SQLite")
+        # Connexion à la base de données
 
-    # Récupération du hash_mdp dans la base de données à partir de l'identifiant
+        conn = sqlite3.connect("profils_utilisateurs.db")
+        cur = conn.cursor()
+        print("Connexion réussie à SQLite")
 
-    cur.execute(
-        "SELECT hash_mdp FROM utilisateurs WHERE identifiant = ?", (identifiant,)
-    )
-    res = cur.fetchall()
+        # Récupération du hash_mdp dans la base de données à partir de l'identifiant
 
-    # Si l'identifiant n'est pas dans la base de données
-
-    if len(res) == 0:
-        flash(
-            "Cet identifiant n'existe pas dans la base de données. Revenez à la page précédente."
+        cur.execute(
+            "SELECT hash_mdp FROM utilisateurs WHERE identifiant = ?", (identifiant,)
         )
-        return render_template("authFailed.html")
+        res = cur.fetchall()
 
-    # Si l'identifiant est dans la base de données
+        # Si l'identifiant n'est pas dans la base de données
 
-    hash_mdp = res[0][0]
-    print("Hash récupéré")
+        if len(res) == 0:
+            error = "Cet identifiant n'existe pas dans la base de données."
+            return render_template("login.html", error=error)
 
-    # Fermeture de la base de données
+        # Fermeture de la base de données
+    
+        cur.close()
+        conn.close()
+        print("Connexion SQlite fermée")
 
-    cur.close()
-    conn.close()
-    print("Connexion SQlite fermée")
+        # Si l'identifiant est dans la base de données
 
-    # Récupération du salt et calcul du hash avec le salt et le mdp entré apr l'utilisateur
+        hash_mdp = res[0][0]
+        print("Hash récupéré")
 
-    salt = hash_mdp[:32]
-    key = hashlib.pbkdf2_hmac(
-        "sha256", input_mdp.encode("utf-8"), salt, 100000, dklen=128
-    )
+        # Récupération du salt et calcul du hash avec le salt et le mdp entré apr l'utilisateur
 
-    # Si le mot de passe est incorrect
+        salt = hash_mdp[:32]
+        key = hashlib.pbkdf2_hmac(
+            "sha256", input_mdp.encode("utf-8"), salt, 100000, dklen=128
+        )
 
-    if hash_mdp[32:] != key:
-        flash("Le mot de passe est incorrect. Revenez à la page précédente.")
-        return render_template("authFailed.html")
+        # Si le mot de passe est incorrect
 
-    return "Site en cours de construction..."
+        if hash_mdp[32:] != key:
+            print("Mot de passe incorrect")
+            error = "Le mot de passe est incorrect."
+            return render_template("login.html", error=error)
+
+        # Si l'identifiant et le mot de passe sont corrects
+
+        print("Mot de passe correct")
+        error = "Vous êtes authentifié."
+        session['username'] = identifiant
+
+        # Si l'utilisateur est admin
+
+        if identifiant == "admin":
+            return redirect(url_for('admin'))
+
+        # Pour un utilisateur lambda
+
+        return redirect(url_for('index'))
+
+    return render_template("login.html")
+
+
+@app.route('/logout')
+def logout():
+    session.pop('username', None)
+    return redirect(url_for('index'))
 
 
 @app.route("/add_user", methods=["POST"])
@@ -132,7 +161,9 @@ def add_user():
     conn.close()
     print("Connexion SQlite fermée")
 
-    return render_template("admin.html")
+    error = "Nouvel utilisateur intégré dans la base de données"
+
+    return render_template("admin.html", error=error)
 
 
 @app.route("/add_device", methods=["POST"])
@@ -169,7 +200,9 @@ def add_device():
     conn.close()
     print("Connexion SQlite fermée")
 
-    return render_template("admin.html")
+    error = "Nouvel appareil intégré dans la base de données"
+
+    return render_template("admin.html", error=error)
 
 
 class MessageAnnouncer:
