@@ -23,25 +23,46 @@ app = Flask(__name__)
 secret = secrets.token_urlsafe(32)
 app.secret_key = secret
 
+if __name__ == '__main__':
+    app.run()
+
 
 @app.route("/")
 def index():
-    if 'username' in session:
-        if session['username'] == 'admin':
-            return redirect(url_for('admin'))
-        return 'Logged in as %s' % escape(session['username'])
+
+    if session.get('username') == 'admin':
+        return redirect(url_for('admin'))
+
+    if session.get('username') != None:
+        return '''
+            <p>Logged in as %s<p>
+            <button onclick="window.location.href='/logout';">Logout</button>
+        ''' % escape(session['username'])
     return redirect(url_for('login'))
 
 
 @app.route("/admin")
 def admin():
+
     if 'username' in session:
-        return render_template('admin.html')
+
+        if session.get('username') == 'admin':
+            return render_template('admin.html')
+
+        return redirect(url_for('index'))
+
     return redirect(url_for('login'))
 
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
+
+    if 'username' in session:
+
+        if session['username'] == 'admin':
+            return redirect(url_for('admin'))
+
+        return redirect(url_for('index'))
 
     if request.method == 'POST':
 
@@ -71,7 +92,7 @@ def login():
             return render_template("login.html", error=error)
 
         # Fermeture de la base de données
-    
+
         cur.close()
         conn.close()
         print("Connexion SQlite fermée")
@@ -100,6 +121,7 @@ def login():
         print("Mot de passe correct")
         error = "Vous êtes authentifié."
         session['username'] = identifiant
+#        session['logged_in'] = True
 
         # Si l'utilisateur est admin
 
@@ -116,7 +138,8 @@ def login():
 @app.route('/logout')
 def logout():
     session.pop('username', None)
-    return redirect(url_for('index'))
+#    session.pop('logged_in', None)
+    return redirect(url_for('login'))
 
 
 @app.route("/add_user", methods=["POST"])
@@ -280,3 +303,12 @@ def listen():
             yield msg
 
     return Response(stream(), mimetype="text/event-stream")
+
+
+
+
+
+
+if __name__ == '__main__':
+    app.run()
+
