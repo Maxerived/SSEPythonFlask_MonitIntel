@@ -63,13 +63,17 @@ body {font-family: Arial;}
             <br>
             <input type="password" name="psw" required>
             <br>
-            <label for="uname"><b>Entreprise</b></label>
+            <label for="site"><b>Site</b></label>
             <br>
-            <input type="text" name="entreprise" required>
+            <input type="text" name="site" required>
             <br>
-            <label for="section"><b>Section/Département</b></label>
+            <label for="chaine"><b>Chaine/Service</b></label>
             <br>
-            <input type="text" name="section" required>
+            <input type="text" name="chaine" required>
+            <br>
+            <label for="ligne"><b>Ligne de production</b></label>
+            <br>
+            <input type="text" name="ligne">
             <br>
             <label for="poste"><b>Poste tenu</b></label>
             <br>
@@ -81,21 +85,25 @@ body {font-family: Arial;}
 
     <div id="adddevice" class="tabcontent">
         <form action="/add_device" method="post">
-            <label for="entreprise"><b>Entreprise</b></label>
-            <br>
-            <input type="text" name="entreprise" required>
-            <br>
-            <label for="section"><b>Section/Département</b></label>
-            <br>
-            <input type="text" name="section" required>
-            <br>
             <label for="appareil"><b>Appareil</b></label>
             <br>
             <input type="text" name="appareil" required>
             <br>
-            <label for="uname"><b>Variable Mesurée</b></label>
+            <label for="type"><b>Type</b></label>
             <br>
-            <input type="text" name="variable" required>
+            <input type="text" name="type" required>
+            <br>
+            <label for="site"><b>Site de production</b></label>
+            <br>
+            <input type="text" name="site" required>
+            <br>
+            <label for="chaine"><b>Chaine de production</b></label>
+            <br>
+            <input type="text" name="chaine" required>
+            <br>
+            <label for="ligne"><b>Ligne de production</b></label>
+            <br>
+            <input type="text" name="ligne" required>
             <br>
             <button type="submit">Ajouter</button>
         </form>
