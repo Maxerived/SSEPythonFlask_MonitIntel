@@ -1,140 +1,196 @@
-{% extends "layout.html" %}
-{% block body %}
+{% extends "layout.html" %} {% block body %}
 <html>
 
 <head>
-  <title>Page administrateur</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <style>
-    body {
-      font-family: Arial;
-    }
-
-    /* Style the tab */
-    .tab {
-      overflow: hidden;
-      border: 1px solid #ccc;
-      background-color: #f1f1f1;
-    }
-
-    /* Style the buttons inside the tab */
-    .tab button {
-      background-color: inherit;
-      float: left;
-      border: none;
-      outline: none;
-      cursor: pointer;
-      padding: 14px 16px;
-      transition: 0.3s;
-      font-size: 17px;
-    }
-
-    /* Change background color of buttons on hover */
-    .tab button:hover {
-      background-color: #ddd;
-    }
-
-    /* Create an active/current tablink class */
-    .tab button.active {
-      background-color: #ccc;
-    }
-
-    /* Style the tab content */
-    .tabcontent {
-      display: none;
-      padding: 6px 12px;
-      border: 1px solid #ccc;
-      border-top: none;
-    }
-  </style>
+    <title>Page administrateur</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <!--Custom styles-->
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='styles/admin.css') }}">
 </head>
 
-<body>
-  <h2>Page administrateur</h2>
-  <div class="tab">
-    <button class="tablinks" onclick="openForm(event, 'adduser')">Ajouter un utilisateur</button>
-    <button class="tablinks" onclick="openForm(event, 'adddevice')">Ajouter un appareil</button>
-  </div>
+<body onload="openFirstForm()">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="">Navbar</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
 
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item" onclick="openForm(event, 'adduser')">
+                    <a class="nav-link tablinks" href="#">Ajouter un utilisateur</a>
+                </li>
+                <li class="nav-item" onclick="openForm(event, 'adddevice')">
+                    <a class="nav-link tablinks" href="#adddevice">Ajouter un appareil</a>
+                </li>
+            </ul>
+            <button class="btn btn-outline-danger my-2 my-sm-0"
+                onclick="window.location.href='/logout';">Logout</button>
+        </div>
+    </nav>
 
     <div id="adduser" class="tabcontent">
         <form action="/admin/add_user" method="post">
-            <label for="uname"><b>Identifiant</b></label>
-            <br>
-            <input type="text" name="uname" required>
-            <br>
-            <label for="psw"><b>Mot de passe</b></label>
-            <br>
-            <input type="password" name="psw" required>
-            <br>
-            <label for="site"><b>Site</b></label>
-            <br>
-            <input type="text" name="site" required>
-            <br>
-            <label for="chaine"><b>Chaine/Service</b></label>
-            <br>
-            <input type="text" name="chaine" required>
-            <br>
-            <label for="ligne"><b>Ligne de production</b></label>
-            <br>
-            <input type="text" name="ligne">
-            <br>
-            <label for="poste"><b>Poste tenu</b></label>
-            <br>
-            <input type="text" name="poste" required>
-            <br>
-            <button type="submit">Ajouter</button>
+            <div class="row">
+                <div class="col-6">
+                    <label for="uname"><b>Identifiant</b></label>
+                    <br>
+                    <input class="form-control" type="text" name="uname" required>
+                    <br>
+                    <label for="psw"><b>Mot de passe</b></label>
+                    <br>
+                    <input class="form-control" type="password" name="psw" required>
+                    <br>
+
+                    <label for="poste"><b>Poste tenu</b></label>
+                    <br>
+                    <select class="form-control" name="poste">
+                        <option value="dir_achats">Directeurs des achats</option>
+                        <option value="resp_site">Responsable de Site</option>
+                        <option value="resp_prod">Responsables approd'un site de production</option>
+                        <option value="resp_chaine">Responsable de chaine</option>
+                        <option value="resp_ligne">Responsable de ligne</option>
+                    </select>
+                    <br>
+                </div>
+                <div class="col-6">
+                    <label for="site"><b>Site</b></label>
+                    <br>
+                    <select class="form-control" name="site">
+                        <option value="A">A</option>
+                        <option value="B">B</option>
+                        <option value="C">C</option>
+                    </select>
+                    <br>
+                    <label for="chaine"><b>Chaine/Service</b></label>
+                    <br>
+                    <select class="form-control" name="chaine">
+                        <option value="A1">A1</option>
+                        <option value="B1">B1</option>
+                        <option value="B2">B2</option>
+                        <option value="B3">B3</option>
+                        <option value="C1">C1</option>
+                        <option value="C2">C2</option>
+                    </select>
+                    <br>
+                    <label for="ligne"><b>Ligne de production</b></label>
+                    <br>
+                    <select class="form-control" name="ligne">
+                        <option value="prep">Préparation</option>
+                        <option value="cuis">Cuisson</option>
+                        <option value="emba">Emballage</option>
+                    </select>
+                    <br>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-10 error">
+                    {% if error %}
+                    <strong>Info :</strong> {{ error }}
+                    {% endif %}
+                </div>
+                <div class="col-2">
+                    <button class="btn btn-success" type="submit">Ajouter</button>
+                </div>
+            </div>
         </form>
     </div>
 
     <div id="adddevice" class="tabcontent">
         <form action="/admin/add_device" method="post">
-            <label for="appareil"><b>Appareil</b></label>
-            <br>
-            <input type="text" name="appareil" required>
-            <br>
-            <label for="type"><b>Type</b></label>
-            <br>
-            <input type="text" name="type" required>
-            <br>
-            <label for="site"><b>Site de production</b></label>
-            <br>
-            <input type="text" name="site" required>
-            <br>
-            <label for="chaine"><b>Chaine de production</b></label>
-            <br>
-            <input type="text" name="chaine" required>
-            <br>
-            <label for="ligne"><b>Ligne de production</b></label>
-            <br>
-            <input type="text" name="ligne" required>
-            <br>
-            <button type="submit">Ajouter</button>
+            <div class="row">
+                <div class="col-6">
+                    <label for="appareil"><b>Appareil</b></label>
+                    <br>
+                    <input class="form-control" type="text" name="appareil" required>
+                    <br>
+                    <label for="type"><b>Type</b></label>
+                    <br>
+                    <select class="form-control" name="type">
+                        <option value="P1">(P1) Poids cuve Matière première</option>
+                        <option value="VM1">(VM1) Vitesse malaxage</option>
+                        <option value="VT1">(VT1) Vitesse tapis ligne préparation</option>
+                        <option value="T1">(T1) Température four</option>
+                        <option value="VT2">(VT2) Vitesse tapis ligne cuisson</option>
+                        <option value="P2">(P2) Poids produit fini sortie de chaine de production</option>
+                    </select>
+                    <br>
+                    <label for="site"><b>Site de production</b></label>
+                    <br>
+                    <select class="form-control" name="site">
+                        <option value="A">A</option>
+                        <option value="B">B</option>
+                        <option value="C">C</option>
+                    </select>
+                    <br>
+                </div>
+                <div class="col-6">
+                    <label for="chaine"><b>Chaine de production</b></label>
+                    <br>
+                    <select class="form-control" name="chaine">
+                        <option value="A1">A1</option>
+                        <option value="B1">B1</option>
+                        <option value="B2">B2</option>
+                        <option value="B3">B3</option>
+                        <option value="C1">C1</option>
+                        <option value="C2">C2</option>
+                    </select>
+                    <br>
+                    <label for="ligne"><b>Ligne de production</b></label>
+                    <br>
+                    <select class="form-control" name="ligne">
+                        <option value="prep">Préparation</option>
+                        <option value="cuis">Cuisson</option>
+                        <option value="emba">Emballage</option>
+                    </select>
+                    <br>
+
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-10 error">
+                    {% if error %}
+                    <strong>Info :</strong> {{ error }}
+                    {% endif %}
+                </div>
+                <div class="col-2">
+                    <button class="btn btn-success" type="submit">Ajouter</button>
+                </div>
+            </div>
         </form>
     </div>
 
-  <script>function openForm(evt, cityName) {
-      var i, tabcontent, tablinks;
-      tabcontent = document.getElementsByClassName("tabcontent");
-      for (i = 0; i < tabcontent.length; i++) {
-        tabcontent[i].style.display = "none";
-      }
-      tablinks = document.getElementsByClassName("tablinks");
-      for (i = 0; i < tablinks.length; i++) {
-        tablinks[i].className = tablinks[i].className.replace(" active", "");
-      }
-      document.getElementById(cityName).style.display = "block";
-      evt.currentTarget.className += " active";
-    }</script>
+    <script>
+        function openFirstForm() {
+            var tabcontent;
+            var navitem;
+            tabcontent = document.getElementsByClassName("tabcontent");
+            navitem = document.getElementsByClassName("nav-item");
 
-  {% if error %}
-  <p class=error>
-    <strong>Info :</strong> {{ error }}
-    {% endif %}
-  <p>
+            tabcontent[0].style.display = "block";
+            navitem[0].className += " active";
+        }
 
-    <button onclick="window.location.href='/logout';">Logout</button>
-
+        function openForm(evt, cityName) {
+            var i, tabcontent, navitem;
+            tabcontent = document.getElementsByClassName("tabcontent");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+            }
+            navitem = document.getElementsByClassName("nav-item");
+            for (i = 0; i < navitem.length; i++) {
+                navitem[i].className = navitem[i].className.replace(" active", "");
+            }
+            document.getElementById(cityName).style.display = "block";
+            evt.currentTarget.className += " active";
+        }
+    </script>
 </body>
 
 </html>
