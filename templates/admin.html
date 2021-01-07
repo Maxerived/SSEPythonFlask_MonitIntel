@@ -1,136 +1,141 @@
 {% extends "layout.html" %}
 {% block body %}
 <html>
+
 <head>
-<title>Page administrateur</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<style>
-body {font-family: Arial;}
+  <title>Page administrateur</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      font-family: Arial;
+    }
 
-/* Style the tab */
-.tab {
-  overflow: hidden;
-  border: 1px solid #ccc;
-  background-color: #f1f1f1;
-}
+    /* Style the tab */
+    .tab {
+      overflow: hidden;
+      border: 1px solid #ccc;
+      background-color: #f1f1f1;
+    }
 
-/* Style the buttons inside the tab */
-.tab button {
-  background-color: inherit;
-  float: left;
-  border: none;
-  outline: none;
-  cursor: pointer;
-  padding: 14px 16px;
-  transition: 0.3s;
-  font-size: 17px;
-}
+    /* Style the buttons inside the tab */
+    .tab button {
+      background-color: inherit;
+      float: left;
+      border: none;
+      outline: none;
+      cursor: pointer;
+      padding: 14px 16px;
+      transition: 0.3s;
+      font-size: 17px;
+    }
 
-/* Change background color of buttons on hover */
-.tab button:hover {
-  background-color: #ddd;
-}
+    /* Change background color of buttons on hover */
+    .tab button:hover {
+      background-color: #ddd;
+    }
 
-/* Create an active/current tablink class */
-.tab button.active {
-  background-color: #ccc;
-}
+    /* Create an active/current tablink class */
+    .tab button.active {
+      background-color: #ccc;
+    }
 
-/* Style the tab content */
-.tabcontent {
-  display: none;
-  padding: 6px 12px;
-  border: 1px solid #ccc;
-  border-top: none;
-}
-</style>
+    /* Style the tab content */
+    .tabcontent {
+      display: none;
+      padding: 6px 12px;
+      border: 1px solid #ccc;
+      border-top: none;
+    }
+  </style>
 </head>
+
 <body>
-    <h2>Page administrateur</h2>
-    <div class="tab">
-        <button class="tablinks" onclick="openForm(event, 'adduser')">Ajouter un utilisateur</button>
-        <button class="tablinks" onclick="openForm(event, 'adddevice')">Ajouter un appareil</button>
-    </div>
+  <h2>Page administrateur</h2>
+  <div class="tab">
+    <button class="tablinks" onclick="openForm(event, 'adduser')">Ajouter un utilisateur</button>
+    <button class="tablinks" onclick="openForm(event, 'adddevice')">Ajouter un appareil</button>
+  </div>
 
 
-    <div id="adduser" class="tabcontent">
-        <form action="/add_user" method="post">
-            <label for="uname"><b>Identifiant</b></label>
-            <br>
-            <input type="text" name="uname" required>
-            <br>
-            <label for="psw"><b>Mot de passe</b></label>
-            <br>
-            <input type="password" name="psw" required>
-            <br>
-            <label for="site"><b>Site</b></label>
-            <br>
-            <input type="text" name="site" required>
-            <br>
-            <label for="chaine"><b>Chaine/Service</b></label>
-            <br>
-            <input type="text" name="chaine" required>
-            <br>
-            <label for="ligne"><b>Ligne de production</b></label>
-            <br>
-            <input type="text" name="ligne">
-            <br>
-            <label for="poste"><b>Poste tenu</b></label>
-            <br>
-            <input type="text" name="poste" required>
-            <br>
-            <button type="submit">Ajouter</button>
-        </form>
-    </div>
+  <div id="adduser" class="tabcontent">
+    <form action="/add_user" method="post">
+      <label for="uname"><b>Identifiant</b></label>
+      <br>
+      <input type="text" name="uname" required>
+      <br>
+      <label for="psw"><b>Mot de passe</b></label>
+      <br>
+      <input type="password" name="psw" required>
+      <br>
+      <label for="site"><b>Site</b></label>
+      <br>
+      <input type="text" name="site" required>
+      <br>
+      <label for="chaine"><b>Chaine/Service</b></label>
+      <br>
+      <input type="text" name="chaine" required>
+      <br>
+      <label for="ligne"><b>Ligne de production</b></label>
+      <br>
+      <input type="text" name="ligne">
+      <br>
+      <label for="poste"><b>Poste tenu</b></label>
+      <br>
+      <input type="text" name="poste" required>
+      <br>
+      <button type="submit">Ajouter</button>
+    </form>
+  </div>
 
-    <div id="adddevice" class="tabcontent">
-        <form action="/add_device" method="post">
-            <label for="appareil"><b>Appareil</b></label>
-            <br>
-            <input type="text" name="appareil" required>
-            <br>
-            <label for="type"><b>Type</b></label>
-            <br>
-            <input type="text" name="type" required>
-            <br>
-            <label for="site"><b>Site de production</b></label>
-            <br>
-            <input type="text" name="site" required>
-            <br>
-            <label for="chaine"><b>Chaine de production</b></label>
-            <br>
-            <input type="text" name="chaine" required>
-            <br>
-            <label for="ligne"><b>Ligne de production</b></label>
-            <br>
-            <input type="text" name="ligne" required>
-            <br>
-            <button type="submit">Ajouter</button>
-        </form>
-    </div>
+  <div id="adddevice" class="tabcontent">
+    <form action="/add_device" method="post">
+      <label for="appareil"><b>Appareil</b></label>
+      <br>
+      <input type="text" name="appareil" required>
+      <br>
+      <label for="type"><b>Type</b></label>
+      <br>
+      <input type="text" name="type" required>
+      <br>
+      <label for="site"><b>Site de production</b></label>
+      <br>
+      <input type="text" name="site" required>
+      <br>
+      <label for="chaine"><b>Chaine de production</b></label>
+      <br>
+      <input type="text" name="chaine" required>
+      <br>
+      <label for="ligne"><b>Ligne de production</b></label>
+      <br>
+      <input type="text" name="ligne" required>
+      <br>
+      <button type="submit">Ajouter</button>
+    </form>
+  </div>
 
-    <script>function openForm(evt, cityName) {
-            var i, tabcontent, tablinks;
-            tabcontent = document.getElementsByClassName("tabcontent");
-            for (i = 0; i < tabcontent.length; i++) {
-                tabcontent[i].style.display = "none";
-            }
-            tablinks = document.getElementsByClassName("tablinks");
-            for (i = 0; i < tablinks.length; i++) {
-                tablinks[i].className = tablinks[i].className.replace(" active", "");
-            }
-            document.getElementById(cityName).style.display = "block";
-            evt.currentTarget.className += " active";
-        }</script>
+  <script>function openForm(evt, cityName) {
+      var i, tabcontent, tablinks;
+      tabcontent = document.getElementsByClassName("tabcontent");
+      for (i = 0; i < tabcontent.length; i++) {
+        tabcontent[i].style.display = "none";
+      }
+      tablinks = document.getElementsByClassName("tablinks");
+      for (i = 0; i < tablinks.length; i++) {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+      }
+      document.getElementById(cityName).style.display = "block";
+      evt.currentTarget.className += " active";
+    }</script>
 
-    {% if error %}
-    <p class=error>
-        <strong>Info :</strong> {{ error }}
-        {% endif %}
-    <p>
+  {% if error %}
+  <p class=error>
+    <strong>Info :</strong> {{ error }}
+    {% endif %}
+  <p>
 
     <button onclick="window.location.href='/logout';">Logout</button>
 
 </body>
+
 </html>
 {% endblock %}
