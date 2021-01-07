@@ -137,7 +137,7 @@ def logout():
     return redirect(url_for('login'))
 
 
-@app.route("/add_user", methods=["POST"])
+@app.route("/admin/add_user", methods=["POST"])
 def add_user():
     """Fonction pour ajouter un utilisateur dans la base de données"""
 
@@ -190,7 +190,7 @@ def add_user():
     return render_template("admin.html", error=error)
 
 
-@app.route("/add_device", methods=["POST"])
+@app.route("/admin/add_device", methods=["POST"])
 def add_device():
     """Fonction pour ajouter un appareil dans la base de données"""
 
