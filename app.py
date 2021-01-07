@@ -99,7 +99,7 @@ def login():
 
         hash_mdp = get_hash_from_db(identifiant)
         print("Hash récupéré")
-        
+
         # Si l'identifiant n'est pas dans la base de données
 
         if hash_mdp == None:
@@ -173,26 +173,28 @@ def add_user():
 
     # Insertion d'un nouvel utilisateur dans la base de données
 
-    cur.execute(
-        """INSERT INTO utilisateurs
-                (identifiant,
-                hash_mdp,
-                site,
-                chaine_service,
-                ligne_de_production,
-                poste_tenu) VALUES (?, ?, ?, ?, ?, ?)""",
-        (identifiant, hash_mdp, site, chaine, ligne, poste)
-    )
+    try:
+        cur.execute(
+            """INSERT INTO utilisateurs
+                    (identifiant,
+                    hash_mdp,
+                    site,
+                    chaine_service,
+                    ligne_de_production,
+                    poste_tenu) VALUES (?, ?, ?, ?, ?, ?)""",
+            (identifiant, hash_mdp, site, chaine, ligne, poste)
+        )
+        error = "Nouvel utilisateur intégré dans la base de données"
+
+    except sqlite3.IntegrityError:
+        error = "Cet identifiant existe déjà dans la base de données !!!"
 
     # Fermeture de la base de données
 
     cur.close()
     conn.commit()
-    print("Utilisateur inséré avec succès")
     conn.close()
     print("Connexion SQlite fermée")
-
-    error = "Nouvel utilisateur intégré dans la base de données"
 
     return render_template("admin.html", error=error)
 
@@ -218,25 +220,27 @@ def add_device():
 
     # Insertion d'un nouvel appareil dans la base de données
 
-    cur.execute(
-        """INSERT INTO appareils
-                (appareil,
-                type,
-                site_de_production,
-                chaine_de_production,
-                ligne_de_production) VALUES (?, ?, ?, ?, ?)""",
-        (appareil, type_a, site, chaine, ligne)
-    )
+    try:
+        cur.execute(
+            """INSERT INTO appareils
+                    (appareil,
+                    type,
+                    site_de_production,
+                    chaine_de_production,
+                    ligne_de_production) VALUES (?, ?, ?, ?, ?)""",
+            (appareil, type_a, site, chaine, ligne)
+        )
+        error = "Nouvel appareil intégré dans la base de données"
+
+    except sqlite3.IntegrityError:
+        error = "Cet appareil existe déjà dans la base de données !!!"
 
     # Fermeture de la base de données
 
     cur.close()
     conn.commit()
-    print("Appareil inséré avec succès")
     conn.close()
     print("Connexion SQlite fermée")
-
-    error = "Nouvel appareil intégré dans la base de données"
 
     return render_template("admin.html", error=error)
 
