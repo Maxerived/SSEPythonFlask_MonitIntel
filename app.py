@@ -23,6 +23,32 @@ app = Flask(__name__)
 secret = secrets.token_urlsafe(32)
 app.secret_key = secret
 
+def get_hash_from_db(identifiant):
+
+    # Connexion à la base de données
+
+    conn = sqlite3.connect("profils_utilisateurs.db")
+    cur = conn.cursor()
+    print("Connexion réussie à SQLite")
+
+    # Récupération du hash_mdp à partir de l'identifiant
+
+    cur.execute(
+        "SELECT hash_mdp FROM utilisateurs WHERE identifiant = ?", (identifiant,)
+    )
+    res = cur.fetchall()
+
+    # Fermeture de la base de données
+
+    cur.close()
+    conn.close()
+    print("Connexion SQlite fermée")
+
+    if len(res) == 0:
+        return None
+    
+    return res[0][0]
+
 
 @app.route("/")
 def index():
@@ -69,35 +95,16 @@ def login():
         identifiant = auth_form["uname"]
         input_mdp = auth_form["psw"]
 
-        # Connexion à la base de données
-
-        conn = sqlite3.connect("profils_utilisateurs.db")
-        cur = conn.cursor()
-        print("Connexion réussie à SQLite")
-
         # Récupération du hash_mdp dans la base de données à partir de l'identifiant
 
-        cur.execute(
-            "SELECT hash_mdp FROM utilisateurs WHERE identifiant = ?", (identifiant,)
-        )
-        res = cur.fetchall()
+        hash_mdp = get_hash_from_db(identifiant)
+        print("Hash récupéré")
 
         # Si l'identifiant n'est pas dans la base de données
 
-        if len(res) == 0:
+        if hash_mdp == None:
             error = "Cet identifiant n'existe pas dans la base de données."
             return render_template("login.html", error=error)
-
-        # Fermeture de la base de données
-
-        cur.close()
-        conn.close()
-        print("Connexion SQlite fermée")
-
-        # Si l'identifiant est dans la base de données
-
-        hash_mdp = res[0][0]
-        print("Hash récupéré")
 
         # Récupération du salt et calcul du hash avec le salt et le mdp entré apr l'utilisateur
 
@@ -137,7 +144,7 @@ def logout():
     return redirect(url_for('login'))
 
 
-@app.route("/add_user", methods=["POST"])
+@app.route("/admin/add_user", methods=["POST"])
 def add_user():
     """Fonction pour ajouter un utilisateur dans la base de données"""
 
@@ -166,31 +173,33 @@ def add_user():
 
     # Insertion d'un nouvel utilisateur dans la base de données
 
-    cur.execute(
-        """INSERT INTO utilisateurs
-                (identifiant,
-                hash_mdp,
-                site,
-                chaine_service,
-                ligne_de_production,
-                poste_tenu) VALUES (?, ?, ?, ?, ?, ?)""",
-        (identifiant, hash_mdp, site, chaine, ligne, poste)
-    )
+    try:
+        cur.execute(
+            """INSERT INTO utilisateurs
+                    (identifiant,
+                    hash_mdp,
+                    site,
+                    chaine_service,
+                    ligne_de_production,
+                    poste_tenu) VALUES (?, ?, ?, ?, ?, ?)""",
+            (identifiant, hash_mdp, site, chaine, ligne, poste)
+        )
+        error = "Nouvel utilisateur intégré dans la base de données"
+
+    except sqlite3.IntegrityError:
+        error = "Cet identifiant existe déjà dans la base de données !!!"
 
     # Fermeture de la base de données
 
     cur.close()
     conn.commit()
-    print("Utilisateur inséré avec succès")
     conn.close()
     print("Connexion SQlite fermée")
-
-    error = "Nouvel utilisateur intégré dans la base de données"
 
     return render_template("admin.html", error=error)
 
 
-@app.route("/add_device", methods=["POST"])
+@app.route("/admin/add_device", methods=["POST"])
 def add_device():
     """Fonction pour ajouter un appareil dans la base de données"""
 
@@ -211,25 +220,27 @@ def add_device():
 
     # Insertion d'un nouvel appareil dans la base de données
 
-    cur.execute(
-        """INSERT INTO appareils
-                (appareil,
-                type,
-                site_de_production,
-                chaine_de_production,
-                ligne_de_production) VALUES (?, ?, ?, ?, ?)""",
-        (appareil, type_a, site, chaine, ligne)
-    )
+    try:
+        cur.execute(
+            """INSERT INTO appareils
+                    (appareil,
+                    type,
+                    site_de_production,
+                    chaine_de_production,
+                    ligne_de_production) VALUES (?, ?, ?, ?, ?)""",
+            (appareil, type_a, site, chaine, ligne)
+        )
+        error = "Nouvel appareil intégré dans la base de données"
+
+    except sqlite3.IntegrityError:
+        error = "Cet appareil existe déjà dans la base de données !!!"
 
     # Fermeture de la base de données
 
     cur.close()
     conn.commit()
-    print("Appareil inséré avec succès")
     conn.close()
     print("Connexion SQlite fermée")
-
-    error = "Nouvel appareil intégré dans la base de données"
 
     return render_template("admin.html", error=error)
 
