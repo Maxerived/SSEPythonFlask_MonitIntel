@@ -57,61 +57,61 @@
   </div>
 
 
-  <div id="adduser" class="tabcontent">
-    <form action="/add_user" method="post">
-      <label for="uname"><b>Identifiant</b></label>
-      <br>
-      <input type="text" name="uname" required>
-      <br>
-      <label for="psw"><b>Mot de passe</b></label>
-      <br>
-      <input type="password" name="psw" required>
-      <br>
-      <label for="site"><b>Site</b></label>
-      <br>
-      <input type="text" name="site" required>
-      <br>
-      <label for="chaine"><b>Chaine/Service</b></label>
-      <br>
-      <input type="text" name="chaine" required>
-      <br>
-      <label for="ligne"><b>Ligne de production</b></label>
-      <br>
-      <input type="text" name="ligne">
-      <br>
-      <label for="poste"><b>Poste tenu</b></label>
-      <br>
-      <input type="text" name="poste" required>
-      <br>
-      <button type="submit">Ajouter</button>
-    </form>
-  </div>
+    <div id="adduser" class="tabcontent">
+        <form action="/admin/add_user" method="post">
+            <label for="uname"><b>Identifiant</b></label>
+            <br>
+            <input type="text" name="uname" required>
+            <br>
+            <label for="psw"><b>Mot de passe</b></label>
+            <br>
+            <input type="password" name="psw" required>
+            <br>
+            <label for="site"><b>Site</b></label>
+            <br>
+            <input type="text" name="site" required>
+            <br>
+            <label for="chaine"><b>Chaine/Service</b></label>
+            <br>
+            <input type="text" name="chaine" required>
+            <br>
+            <label for="ligne"><b>Ligne de production</b></label>
+            <br>
+            <input type="text" name="ligne">
+            <br>
+            <label for="poste"><b>Poste tenu</b></label>
+            <br>
+            <input type="text" name="poste" required>
+            <br>
+            <button type="submit">Ajouter</button>
+        </form>
+    </div>
 
-  <div id="adddevice" class="tabcontent">
-    <form action="/add_device" method="post">
-      <label for="appareil"><b>Appareil</b></label>
-      <br>
-      <input type="text" name="appareil" required>
-      <br>
-      <label for="type"><b>Type</b></label>
-      <br>
-      <input type="text" name="type" required>
-      <br>
-      <label for="site"><b>Site de production</b></label>
-      <br>
-      <input type="text" name="site" required>
-      <br>
-      <label for="chaine"><b>Chaine de production</b></label>
-      <br>
-      <input type="text" name="chaine" required>
-      <br>
-      <label for="ligne"><b>Ligne de production</b></label>
-      <br>
-      <input type="text" name="ligne" required>
-      <br>
-      <button type="submit">Ajouter</button>
-    </form>
-  </div>
+    <div id="adddevice" class="tabcontent">
+        <form action="/admin/add_device" method="post">
+            <label for="appareil"><b>Appareil</b></label>
+            <br>
+            <input type="text" name="appareil" required>
+            <br>
+            <label for="type"><b>Type</b></label>
+            <br>
+            <input type="text" name="type" required>
+            <br>
+            <label for="site"><b>Site de production</b></label>
+            <br>
+            <input type="text" name="site" required>
+            <br>
+            <label for="chaine"><b>Chaine de production</b></label>
+            <br>
+            <input type="text" name="chaine" required>
+            <br>
+            <label for="ligne"><b>Ligne de production</b></label>
+            <br>
+            <input type="text" name="ligne" required>
+            <br>
+            <button type="submit">Ajouter</button>
+        </form>
+    </div>
 
   <script>function openForm(evt, cityName) {
       var i, tabcontent, tablinks;
