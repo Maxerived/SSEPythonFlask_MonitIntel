@@ -23,6 +23,32 @@ app = Flask(__name__)
 secret = secrets.token_urlsafe(32)
 app.secret_key = secret
 
+def get_hash_from_db(identifiant):
+
+    # Connexion à la base de données
+
+    conn = sqlite3.connect("profils_utilisateurs.db")
+    cur = conn.cursor()
+    print("Connexion réussie à SQLite")
+
+    # Récupération du hash_mdp à partir de l'identifiant
+
+    cur.execute(
+        "SELECT hash_mdp FROM utilisateurs WHERE identifiant = ?", (identifiant,)
+    )
+    res = cur.fetchall()
+
+    # Fermeture de la base de données
+
+    cur.close()
+    conn.close()
+    print("Connexion SQlite fermée")
+
+    if len(res) == 0:
+        return None
+    
+    return res[0][0]
+
 
 @app.route("/")
 def index():
@@ -69,35 +95,16 @@ def login():
         identifiant = auth_form["uname"]
         input_mdp = auth_form["psw"]
 
-        # Connexion à la base de données
-
-        conn = sqlite3.connect("profils_utilisateurs.db")
-        cur = conn.cursor()
-        print("Connexion réussie à SQLite")
-
         # Récupération du hash_mdp dans la base de données à partir de l'identifiant
 
-        cur.execute(
-            "SELECT hash_mdp FROM utilisateurs WHERE identifiant = ?", (identifiant,)
-        )
-        res = cur.fetchall()
-
+        hash_mdp = get_hash_from_db(identifiant)
+        print("Hash récupéré")
+        
         # Si l'identifiant n'est pas dans la base de données
 
-        if len(res) == 0:
+        if hash_mdp == None:
             error = "Cet identifiant n'existe pas dans la base de données."
             return render_template("login.html", error=error)
-
-        # Fermeture de la base de données
-
-        cur.close()
-        conn.close()
-        print("Connexion SQlite fermée")
-
-        # Si l'identifiant est dans la base de données
-
-        hash_mdp = res[0][0]
-        print("Hash récupéré")
 
         # Récupération du salt et calcul du hash avec le salt et le mdp entré apr l'utilisateur
 
