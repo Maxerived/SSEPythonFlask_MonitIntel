@@ -6,6 +6,7 @@ import queue
 import secrets
 import sqlite3
 from datetime import datetime
+from pubsub import pub
 from flask import (
     escape,
     Flask,
@@ -64,14 +65,77 @@ def index():
     return redirect(url_for('login'))
 
 
+def get_fields_data():
+
+   # Connexion à la base de données
+
+    conn = sqlite3.connect("profils_utilisateurs.db")
+    cur = conn.cursor()
+    print("Connexion réussie à SQLite")
+
+    # Récupération des données
+
+    postes = []
+    cur.execute("SELECT poste FROM postes")
+    res = cur.fetchall()
+    for poste in res:
+        postes.append(poste[0])
+    sites = []
+    cur.execute("SELECT site FROM sites")
+    res = cur.fetchall()
+    for site in res:
+        sites.append(site[0])
+    chaines = []
+    cur.execute("SELECT chaine FROM chaines")
+    res = cur.fetchall()
+    for chaine in res:
+        chaines.append(chaine[0])
+    lignes = []
+    cur.execute("SELECT ligne FROM lignes")
+    res = cur.fetchall()
+    for ligne in res:
+        lignes.append(ligne[0])
+    types = []
+    cur.execute("SELECT type_appareil FROM types_appareil")
+    res = cur.fetchall()
+    for type_appareil in res:
+        types.append(type_appareil[0])
+    nivs_resp = []
+    cur.execute("SELECT niv_resp FROM niveau_resp")
+    res = cur.fetchall()
+    for niv_resp in res:
+        nivs_resp.append(niv_resp[0])
+
+    # Fermeture de la base de données
+
+    cur.close()
+    conn.close()
+    print("Connexion SQlite fermée")
+
+    return [postes, sites, chaines, lignes, types, nivs_resp]
+
+
 @app.route("/admin")
 def admin():
 
     if 'username' in session:
 
         if session.get('username') == 'admin':
-            return render_template('admin.html')
-
+            data = get_fields_data()
+            postes = [""] + data[0]
+            sites = [""] + data[1]
+            chaines = [""] + data[2]
+            lignes = [""] + data[3]
+            types = [""] + data[4]
+            nivs_resp = [""] + data[5]
+            return render_template("admin.html",
+                postes = postes,
+                sites = sites,
+                chaines = chaines,            
+                lignes = lignes,
+                types = types,
+                nivs_resp = nivs_resp,
+                types_for_poste = types + ["TOUS"])
         return redirect(url_for('index'))
 
     return redirect(url_for('login'))
@@ -185,18 +249,20 @@ def add_user():
             (identifiant, hash_mdp, site, chaine, ligne, poste)
         )
         error = "Nouvel utilisateur intégré dans la base de données"
+        print("Utilisateur intégré dans la base de données avec succès")
 
     except sqlite3.IntegrityError:
         error = "Cet identifiant existe déjà dans la base de données !!!"
+        print("Échec lors de l'insertion d'un nouvel utilisateur : identifiant déjà existant")
 
     # Fermeture de la base de données
+    finally:
+        cur.close()
+        conn.commit()
+        conn.close()
+        print("Connexion SQlite fermée")
 
-    cur.close()
-    conn.commit()
-    conn.close()
-    print("Connexion SQlite fermée")
-
-    return render_template("admin.html", error=error)
+    return render_template('admin.html', error=error)
 
 
 @app.route("/admin/add_device", methods=["POST"])
@@ -231,18 +297,65 @@ def add_device():
             (appareil, type_a, site, chaine, ligne)
         )
         error = "Nouvel appareil intégré dans la base de données"
+        print("Appareil intégré dans la base de données avec succès")
 
     except sqlite3.IntegrityError:
         error = "Cet appareil existe déjà dans la base de données !!!"
+        print("Échec lors de l'insertion d'un nouvel appareil : identifiant déjà existant")
 
     # Fermeture de la base de données
-
-    cur.close()
-    conn.commit()
-    conn.close()
-    print("Connexion SQlite fermée")
+    finally:
+        cur.close()
+        conn.commit()
+        conn.close()
+        print("Connexion SQlite fermée")
 
     return render_template("admin.html", error=error)
+
+
+@app.route("/admin/add_post_type", methods=["POST"])
+def add_post_type():
+    """Fonction pour ajouter un appareil dans la base de données"""
+
+    # Récupération des valeurs entrées sur le formulaire
+
+    post_form = request.form
+    poste = post_form["poste"]
+    niv_resp = post_form["niv_resp"]
+    type_for_poste = post_form["type_for_poste"]
+
+    # Connexion à la base de données
+
+    conn = sqlite3.connect("profils_utilisateurs.db")
+    cur = conn.cursor()
+    print("Connexion réussie à SQLite")
+
+    # Insertion d'un nouvel appareil dans la base de données
+
+    try:
+        cur.execute(
+            """INSERT INTO postes
+                    (poste,
+                    niveau_de_responsabilite,
+                    appareils_vus) VALUES (?, ?, ?)""",
+            (poste, niv_resp, type_for_poste)
+        )
+        error = "Nouveau type de poste intégré dans la base de données"
+        print("Type de poste intégré dans la base de données avec succès")
+
+    except sqlite3.IntegrityError:
+        error = "Ce type de poste existe déjà dans la base de données !!!"
+        print("Échec lors de l'insertion d'un nouveau type de poste : identifiant déjà existant")
+
+    # Fermeture de la base de données
+    finally:
+        cur.close()
+        conn.commit()
+        conn.close()
+        print("Connexion SQlite fermée")
+
+    return render_template("admin.html", error=error)
+
 
 
 class MessageAnnouncer:
