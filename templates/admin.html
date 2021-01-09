@@ -29,6 +29,9 @@
                 <li class="nav-item" onclick="openForm(event, 'adddevice')">
                     <a class="nav-link tablinks" href="#adddevice">Ajouter un appareil</a>
                 </li>
+                <li class="nav-item" onclick="openForm(event, 'addpost')">
+                    <a class="nav-link tablinks" href="#addpost">Ajouter un type de poste</a>
+                </li>
             </ul>
             <button class="btn btn-outline-danger my-2 my-sm-0"
                 onclick="window.location.href='/logout';">Logout</button>
@@ -51,11 +54,9 @@
                     <label for="poste"><b>Poste tenu</b></label>
                     <br>
                     <select class="form-control" name="poste">
-                        <option value="dir_achats">Directeurs des achats</option>
-                        <option value="resp_site">Responsable de Site</option>
-                        <option value="resp_prod">Responsables approd'un site de production</option>
-                        <option value="resp_chaine">Responsable de chaine</option>
-                        <option value="resp_ligne">Responsable de ligne</option>
+                        {% for poste in postes %}
+                            <option value= "{{poste}}">{{poste}}</option>"
+                        {% endfor %}
                     </select>
                     <br>
                 </div>
@@ -63,28 +64,25 @@
                     <label for="site"><b>Site</b></label>
                     <br>
                     <select class="form-control" name="site">
-                        <option value="A">A</option>
-                        <option value="B">B</option>
-                        <option value="C">C</option>
+                        {% for site in sites %}
+                            <option value= "{{site}}">{{site}}</option>"
+                        {% endfor %}
                     </select>
                     <br>
                     <label for="chaine"><b>Chaine/Service</b></label>
                     <br>
                     <select class="form-control" name="chaine">
-                        <option value="A1">A1</option>
-                        <option value="B1">B1</option>
-                        <option value="B2">B2</option>
-                        <option value="B3">B3</option>
-                        <option value="C1">C1</option>
-                        <option value="C2">C2</option>
+                        {% for chaine in chaines %}
+                            <option value= "{{chaine}}">{{chaine}}</option>"
+                        {% endfor %}
                     </select>
                     <br>
                     <label for="ligne"><b>Ligne de production</b></label>
                     <br>
                     <select class="form-control" name="ligne">
-                        <option value="prep">Préparation</option>
-                        <option value="cuis">Cuisson</option>
-                        <option value="emba">Emballage</option>
+                        {% for ligne in lignes %}
+                            <option value= "{{ligne}}">{{ligne}}</option>"
+                        {% endfor %}
                     </select>
                     <br>
                 </div>
@@ -113,20 +111,17 @@
                     <label for="type"><b>Type</b></label>
                     <br>
                     <select class="form-control" name="type">
-                        <option value="P1">(P1) Poids cuve Matière première</option>
-                        <option value="VM1">(VM1) Vitesse malaxage</option>
-                        <option value="VT1">(VT1) Vitesse tapis ligne préparation</option>
-                        <option value="T1">(T1) Température four</option>
-                        <option value="VT2">(VT2) Vitesse tapis ligne cuisson</option>
-                        <option value="P2">(P2) Poids produit fini sortie de chaine de production</option>
+                        {% for type_app in types %}
+                            <option value= "{{type_app}}">{{type_app}}</option>"
+                        {% endfor %}
                     </select>
                     <br>
                     <label for="site"><b>Site de production</b></label>
                     <br>
                     <select class="form-control" name="site">
-                        <option value="A">A</option>
-                        <option value="B">B</option>
-                        <option value="C">C</option>
+                        {% for site in sites %}
+                            <option value= "{{site}}">{{site}}</option>"
+                        {% endfor %}
                     </select>
                     <br>
                 </div>
@@ -134,23 +129,59 @@
                     <label for="chaine"><b>Chaine de production</b></label>
                     <br>
                     <select class="form-control" name="chaine">
-                        <option value="A1">A1</option>
-                        <option value="B1">B1</option>
-                        <option value="B2">B2</option>
-                        <option value="B3">B3</option>
-                        <option value="C1">C1</option>
-                        <option value="C2">C2</option>
+                        {% for chaine in chaines %}
+                            <option value= "{{chaine}}">{{chaine}}</option>"
+                        {% endfor %}
                     </select>
                     <br>
                     <label for="ligne"><b>Ligne de production</b></label>
                     <br>
                     <select class="form-control" name="ligne">
-                        <option value="prep">Préparation</option>
-                        <option value="cuis">Cuisson</option>
-                        <option value="emba">Emballage</option>
+                        {% for ligne in lignes %}
+                            <option value= "{{ligne}}">{{ligne}}</option>"
+                        {% endfor %}
                     </select>
                     <br>
 
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-10 error">
+                    {% if error %}
+                    <strong>Info :</strong> {{ error }}
+                    {% endif %}
+                </div>
+                <div class="col-2">
+                    <button class="btn btn-success" type="submit">Ajouter</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div id="addpost" class="tabcontent">
+        <form action="/admin/add_post" method="post">
+            <div class="row">
+                <div class="col-6">
+                    <label for="poste"><b>Poste</b></label>
+                    <br>
+                    <input class="form-control" type="text" name="poste" required>
+                    <br>
+                    <label for="niv_resp"><b>Niveau de responsabilité</b></label>
+                    <br>
+                    <select class="form-control" name="niv_resp">
+                        {% for niv_resp in nivs_resp %}
+                            <option value= "{{niv_resp}}">{{niv_resp}}</option>"
+                        {% endfor %}
+                    </select>
+                    <br>
+                    <label for="app_vus"><b>Appareils en visibilité</b></label>
+                    <br>
+                    <select class="form-control" name="type_for_poste">
+                        {% for type_for_poste in types_for_poste %}
+                            <option value= "{{type_for_poste}}">{{type_for_poste}}</option>"
+                        {% endfor %}
+                    </select>
+                    <br>
                 </div>
             </div>
             <div class="row">
