@@ -100,6 +100,11 @@ def get_fields_data():
     res = cur.fetchall()
     for type_appareil in res:
         types.append(type_appareil[0])
+    types_descr = []
+    cur.execute("SELECT description FROM types_appareil")
+    res = cur.fetchall()
+    for type_descr in res:
+        types_descr.append(type_descr[0])
     nivs_resp = []
     cur.execute("SELECT niv_resp FROM niveau_resp")
     res = cur.fetchall()
@@ -112,7 +117,7 @@ def get_fields_data():
     conn.close()
     print("Connexion SQlite fermée")
 
-    return [postes, sites, chaines, lignes, types, nivs_resp]
+    return [postes, sites, chaines, lignes, types, types_descr, nivs_resp]
 
 
 @app.route("/admin")
@@ -121,21 +126,32 @@ def admin():
     if 'username' in session:
 
         if session.get('username') == 'admin':
+
+            # Recupération des données à insérer dans les menus déroulants
+
             data = get_fields_data()
             postes = [""] + data[0]
             sites = [""] + data[1]
             chaines = [""] + data[2]
             lignes = [""] + data[3]
             types = [""] + data[4]
-            nivs_resp = [""] + data[5]
+            types_descr = [""] + data[5]
+            nivs_resp = [""] + data[6]
+
+            types_app = [""]
+            for i in range(1, len(types)):
+                types_app.append(types[i] + "_" + types_descr[i])
+
             return render_template("admin.html",
                 postes = postes,
                 sites = sites,
                 chaines = chaines,            
                 lignes = lignes,
-                types = types,
+                types = types_app,
                 nivs_resp = nivs_resp,
-                types_for_poste = types + ["TOUS"])
+                types_for_poste = types_app + ["TOUS"],
+                error = session.get('error'))
+
         return redirect(url_for('index'))
 
     return redirect(url_for('login'))
@@ -262,7 +278,9 @@ def add_user():
         conn.close()
         print("Connexion SQlite fermée")
 
-    return render_template('admin.html', error=error)
+    session['error'] = error
+
+    return redirect(url_for('admin'))
 
 
 @app.route("/admin/add_device", methods=["POST"])
@@ -273,7 +291,7 @@ def add_device():
 
     device_form = request.form
     appareil = device_form["appareil"]
-    type_a = device_form["type"]
+    type_app = device_form["type"].split("_")[0]
     site = device_form["site"]
     chaine = device_form["chaine"]
     ligne = device_form["ligne"]
@@ -294,7 +312,7 @@ def add_device():
                     site_de_production,
                     chaine_de_production,
                     ligne_de_production) VALUES (?, ?, ?, ?, ?)""",
-            (appareil, type_a, site, chaine, ligne)
+            (appareil, type_app, site, chaine, ligne)
         )
         error = "Nouvel appareil intégré dans la base de données"
         print("Appareil intégré dans la base de données avec succès")
@@ -310,7 +328,9 @@ def add_device():
         conn.close()
         print("Connexion SQlite fermée")
 
-    return render_template("admin.html", error=error)
+    session['error'] = error
+
+    return redirect(url_for('admin'))
 
 
 @app.route("/admin/add_post_type", methods=["POST"])
@@ -322,7 +342,7 @@ def add_post_type():
     post_form = request.form
     poste = post_form["poste"]
     niv_resp = post_form["niv_resp"]
-    type_for_poste = post_form["type_for_poste"]
+    type_for_poste = post_form["type_for_poste"].split("_")[0]
 
     # Connexion à la base de données
 
@@ -354,7 +374,11 @@ def add_post_type():
         conn.close()
         print("Connexion SQlite fermée")
 
-    return render_template("admin.html", error=error)
+    session['error'] = error
+
+    return redirect(url_for('admin'))
+    
+
 
 
 
@@ -404,16 +428,16 @@ def get_values(input_data):
             header = lines[0]
 #            mesured_var = header.split()[1]
 #             			print(mesured_var)
-            filestart_time = datetime.strptime(
+            filehead_time = datetime.strptime(
                 " ".join(lines[1].split()[:2]), "%Y-%m-%d %H:%M:%S.%f"
             )
-            fileend_time = datetime.strptime(
+            filetail_time = datetime.strptime(
                 " ".join(lines[-1].split()[:2]), "%Y-%m-%d %H:%M:%S.%f"
             )
-            if fileend_time < filestart_time:
+            if filetail_time < filehead_time:
                 data = lines[-1].split()[2]
                 lines = lines[:-1]
-            elif fileend_time > filestart_time:
+            elif filetail_time > filehead_time:
                 data = lines[1].split()[2]
                 lines = [header] + lines[2:]
         file = open(filename, "w")
@@ -435,7 +459,25 @@ def listen():
     return Response(stream(), mimetype="text/event-stream")
 
 
+@app.route("/listen2", methods=["GET"])
+def listen2():
 
+    conn = sqlite3.connect("profils_utilisateurs.db")
+    cur = conn.cursor()
+    print("Connexion réussie à SQLite")
+
+    # Récupération du poste tenu par l'utilisateur
+
+    cur.execute("SELECT poste_tenu FROM utilisateurs WHERE identifiant = ?", (session['username'],))
+    poste = cur.fectchall()[0][0]
+
+    # Récupération des données
+
+    postes = []
+    cur.execute("SELECT poste FROM postes")
+    res = cur.fetchall()
+    for poste in res:
+        postes.append(poste[0])
 
 
 
