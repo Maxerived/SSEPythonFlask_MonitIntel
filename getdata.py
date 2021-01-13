@@ -75,7 +75,7 @@ def sub_to_devices(username):
     for device in devices:
         pub.subscribe(listener, device)
 
-
+'''
 X = {}
 Y = {}
 appareils = get_devices_seen("alix")
@@ -131,4 +131,4 @@ else:
         date_time[0] = date_time[1]
         pub.sendMessage(topic, topic = topic, data = lines[i][:-2])
 
-
+'''
