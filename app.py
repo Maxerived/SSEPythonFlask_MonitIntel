@@ -5,7 +5,11 @@ import os
 import queue
 import secrets
 import sqlite3
+import time
+import webbrowser as wb
+from collections import deque
 from datetime import datetime
+from matplotlib import dates, pyplot
 from pubsub import pub
 from flask import (
     escape,
@@ -23,6 +27,7 @@ app = Flask(__name__)
 
 secret = secrets.token_urlsafe(32)
 app.secret_key = secret
+
 
 def get_hash_from_db(identifiant):
 
@@ -221,6 +226,7 @@ def login():
 @app.route('/logout')
 def logout():
     session.pop('username', None)
+    session.pop('error', None)
     return redirect(url_for('login'))
 
 
@@ -377,10 +383,10 @@ def add_post_type():
     session['error'] = error
 
     return redirect(url_for('admin'))
-    
 
 
-
+#############################################################################################@
+#############################################################################################@
 
 class MessageAnnouncer:
     def __init__(self):
@@ -459,25 +465,104 @@ def listen():
     return Response(stream(), mimetype="text/event-stream")
 
 
-@app.route("/listen2", methods=["GET"])
-def listen2():
+#############################################################################################@
+#############################################################################################@
 
-    conn = sqlite3.connect("profils_utilisateurs.db")
-    cur = conn.cursor()
-    print("Connexion réussie à SQLite")
 
-    # Récupération du poste tenu par l'utilisateur
+#dates = matplotlib.dates.date2num(list_of_datetimes)
+#matplotlib.pyplot.plot_date(dates, values)
 
-    cur.execute("SELECT poste_tenu FROM utilisateurs WHERE identifiant = ?", (session['username'],))
-    poste = cur.fectchall()[0][0]
+'''
+conn = sqlite3.connect("profils_utilisateurs.db")
+cur = conn.cursor()
+appareils = []
+cur.execute("SELECT appareil FROM appareils")
+res = cur.fetchall()
+cur.close()
+conn.close()
 
-    # Récupération des données
+for appareil in res:
+    appareils.append(appareil[0])
 
-    postes = []
-    cur.execute("SELECT poste FROM postes")
-    res = cur.fetchall()
-    for poste in res:
-        postes.append(poste[0])
+X = {}
+Y = {}
+for appareil in appareils:
+    X[appareil] = deque(maxlen = 10)
+    Y[appareil] = deque(maxlen = 10)
+    X["light_a"] = deque(maxlen = 10)
+    Y["light_a"] = deque(maxlen = 10)
+
+
+def listener(topic = None, data = None):
+    date_time = datetime.strptime(
+        " ".join(data.split()[:2]), "%Y-%m-%d %H:%M:%S.%f"
+    )
+    X[topic].append(dates.date2num(date_time))
+    value = data.split()[2]
+    Y[topic].append(value)
+    anomaly = data.split()[3]
+'''
+
+
+
+
+
+@app.route('/send')
+def send():
+
+    apps = get_devices_seen_by_user('sacha')
+    return jsonify({ i : apps[i] for i in range(len(apps))})
+
+
+    '''
+    # Souscription de l'utilisateur aux topics reliés aux appareils
+
+    for appareil in appareils:
+        pub.subscribe(listener, appareil)
+
+    topic = "light_a"
+    filename = topic + ".tsv"
+    with open(filename, "r") as file:
+        lines = file.readlines()
+    if len(lines) <= 2:
+        date_time = None
+        value = None
+        anomaly = None
+    else:
+        #header = lines[0]
+        #var = header.split()[1]
+        filehead_time = datetime.strptime(
+            " ".join(lines[1].split()[:2]), "%Y-%m-%d %H:%M:%S.%f"
+        )
+        filetail_time = datetime.strptime(
+            " ".join(lines[-1].split()[:2]), "%Y-%m-%d %H:%M:%S.%f"
+        )
+        if filetail_time < filehead_time:
+            lines.reverse()
+            lines = lines[-100:-1]
+        elif filetail_time > filehead_time:
+            lines = lines[-100:]
+
+        date_time = [None, None]
+        pub.sendMessage("A1_P1", topic = topic, data = lines[0])
+        date_time[0] = datetime.strptime(
+        " ".join(lines[0].split()[:2]), "%Y-%m-%d %H:%M:%S.%f"
+        )
+        
+        for i in range(1, 10):
+            date_time[1] = datetime.strptime(
+            " ".join(lines[i].split()[:2]), "%Y-%m-%d %H:%M:%S.%f"
+            )
+            time.sleep((date_time[1]-date_time[0]).seconds/60)
+            date_time[0] = date_time[1]
+            pub.sendMessage("A1_P1", topic = topic, data = lines[i])
+    '''
+
+    return jsonify("Sending data...")
+
+
+
+
 
 
 
