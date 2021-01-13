@@ -4,6 +4,9 @@ import os
 import hashlib
 import getpass
 
+
+# Détermination d'un mot de passe admin au démarrage
+
 ADM_PSW1 = "a"
 ADM_PSW2 = "b"
 
@@ -14,6 +17,8 @@ while ADM_PSW1 != ADM_PSW2:
         print("Les mots de passe entrés sont différents. Veuillez réessayer.")
 
 admin_password = ADM_PSW1
+
+# Suppression des tables si existantes
 
 conn = sqlite3.connect("profils_utilisateurs.db")
 cur = conn.cursor()
@@ -35,7 +40,11 @@ cur.execute(
             site TEXT,
             chaine_service TEXT,
             ligne_de_production TEXT,
-            poste_tenu TEXT)"""
+            poste_tenu TEXT,
+            FOREIGN KEY (site) REFERENCES sites(site),
+            FOREIGN KEY (chaine_service) REFERENCES chaines(chaine),
+            FOREIGN KEY (ligne_de_production) REFERENCES lignes(ligne),
+            FOREIGN KEY (poste_tenu) REFERENCES postes(poste))"""
 )
 
 # Création du hash à insérer dans la base de données pour admin
@@ -56,7 +65,7 @@ cur.execute(
                 chaine_service,
                 ligne_de_production,
                 poste_tenu) VALUES (?, ?, ?, ?, ?, ?)""",
-        ("admin", hash_mdp, "direction_generale", "DSI", "", "directeur SI"),
+        ("admin", hash_mdp, "direction_generale", "DSI", "", "directeur SI")
     )
 
 salt = os.urandom(32)
@@ -93,18 +102,21 @@ cur.execute(
             type TEXT,
             site_de_production TEXT,
             chaine_de_production TEXT,
-            ligne_de_production TEXT)"""
+            ligne_de_production TEXT,
+            FOREIGN KEY (site_de_production) REFERENCES sites(site),
+            FOREIGN KEY (chaine_de_production) REFERENCES chaines(chaine),
+            FOREIGN KEY (ligne_de_production) REFERENCES lignes(ligne))"""
 )
 
 # Insertion d'appareils
 
 for chaine in ["A1", "B1", "B2", "B3", "C1", "C2"]:
-    for appareil in [[chaine + "_P1", "(P1) Poids cuve matière première", chaine[0], chaine, "préparation"],
-        [chaine + "_VM1", "(VM1) Vitesse malaxage", chaine[0], chaine, "préparation"],
-        [chaine + "_VT1", "(VT1) Vitesse tapis ligne préparation", chaine[0], chaine, "préparation"],
-        [chaine + "_T1", "(T1) Température four", chaine[0], chaine, "cuisson"],
-        [chaine + "_VT2", "(VT2) Vitesse tapis ligne cuisson", chaine[0], chaine, "cuisson"],
-        [chaine + "_P2", "(P2) Poids produit fini", chaine[0], chaine, "emballage"]]:
+    for appareil in [[chaine + "_P1", "P1", chaine[0], chaine, "préparation"],
+        [chaine + "_VM1", "VM1", chaine[0], chaine, "préparation"],
+        [chaine + "_VT1", "VT1", chaine[0], chaine, "préparation"],
+        [chaine + "_T1", "T1", chaine[0], chaine, "cuisson"],
+        [chaine + "_VT2", "VT2", chaine[0], chaine, "cuisson"],
+        [chaine + "_P2", "P2", chaine[0], chaine, "emballage"]]:
         cur.execute(
             """INSERT INTO appareils
             (appareil, type, site_de_production, chaine_de_production, ligne_de_production)
@@ -124,11 +136,11 @@ cur.execute(
 # Insertion de postes
 
 for poste in [["directeur général", "direction générale", "TOUS"],
-        ["directeur des achats", "direction générale", "P1"],
-        ["responsable de site", "site", "TOUS"],
-        ["responsable appro site", "site", "P1"],
-        ["responsable de chaine", "chaine", "TOUS"],
-        ["responsable de ligne", "ligne", "TOUS"]]:
+    ["directeur des achats", "direction générale", "P1"],
+    ["responsable de site", "site", "TOUS"],
+    ["responsable appro site", "site", "P1"],
+    ["responsable de chaine", "chaine", "TOUS"],
+    ["responsable de ligne", "ligne", "TOUS"]]:
     cur.execute(
         """INSERT INTO postes
             (poste, niveau_de_responsabilite, appareils_vus) VALUES (?, ?, ?)""",
@@ -175,18 +187,21 @@ for ligne in ["préparation", "cuisson", "emballage"]:
 
 cur.execute(
     """CREATE TABLE IF NOT EXISTS types_appareil
-            (type_appareil TEXT PRIMARY KEY)"""
+            (type_appareil TEXT PRIMARY KEY,
+            description TEXT)"""
 )
 
 # Insertion de types d'appareil
 
-for type_appareil in ["(P1) Poids cuve matière première",
-    "(VM1) Vitesse malaxage",
-    "(VT1) Vitesse tapis ligne préparation",
-    "(T1) Température four",
-    "(VT2) Vitesse tapis ligne cuisson",
-    "(P2) Poids produit fini"]:
-    cur.execute("""INSERT INTO types_appareil (type_appareil) VALUES (?)""", (type_appareil,))
+for type_appareil in [["P1", "Poids cuve matière première"],
+    ["VM1", "Vitesse malaxage"],
+    ["VT1", "Vitesse tapis ligne préparation"],
+    ["T1", "Température four"],
+    ["VT2", "Vitesse tapis ligne cuisson"],
+    ["P2", "Poids produit fini"]]:
+    cur.execute("""INSERT INTO types_appareil
+        (type_appareil, description) VALUES (?, ?)""",
+        (type_appareil[0], type_appareil[1]))
 
 # Création de la table niveau_resp si elle n'existe pas
 

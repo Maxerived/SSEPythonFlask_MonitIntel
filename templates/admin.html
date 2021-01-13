@@ -29,8 +29,8 @@
                 <li class="nav-item" onclick="openForm(event, 'adddevice')">
                     <a class="nav-link tablinks" href="#adddevice">Ajouter un appareil</a>
                 </li>
-                <li class="nav-item" onclick="openForm(event, 'addpost')">
-                    <a class="nav-link tablinks" href="#addpost">Ajouter un type de poste</a>
+                <li class="nav-item" onclick="openForm(event, 'addposttype')">
+                    <a class="nav-link tablinks" href="#addposttype">Ajouter un type de poste</a>
                 </li>
             </ul>
             <button class="btn btn-outline-danger my-2 my-sm-0"
@@ -142,7 +142,6 @@
                         {% endfor %}
                     </select>
                     <br>
-
                 </div>
             </div>
             <div class="row">
@@ -158,8 +157,8 @@
         </form>
     </div>
 
-    <div id="addpost" class="tabcontent">
-        <form action="/admin/add_post" method="post">
+    <div id="addposttype" class="tabcontent">
+        <form action="/admin/add_post_type" method="post">
             <div class="row">
                 <div class="col-6">
                     <label for="poste"><b>Poste</b></label>
@@ -174,7 +173,7 @@
                         {% endfor %}
                     </select>
                     <br>
-                    <label for="app_vus"><b>Appareils en visibilité</b></label>
+                    <label for="app_vus"><b>Type d'appareil en visibilité</b></label>
                     <br>
                     <select class="form-control" name="type_for_poste">
                         {% for type_for_poste in types_for_poste %}
