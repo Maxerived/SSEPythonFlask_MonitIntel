@@ -1,3 +1,8 @@
 .vscode/settings.json
 profils_utilisateurs.db
 __pycache__/app.cpython-39.pyc
+devices_data/.DS_Store
+__pycache__/pubsub.cpython-39.pyc
+__pycache__/login.cpython-39.pyc
+__pycache__/send_data.cpython-39.pyc
+.DS_Store

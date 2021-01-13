@@ -68,20 +68,22 @@ cur.execute(
         ("admin", hash_mdp, "direction_generale", "DSI", "", "directeur SI")
     )
 
-salt = os.urandom(32)
-key = hashlib.pbkdf2_hmac(
+hash_mdp = []
+for i in range(6):
+    salt = os.urandom(32)
+    key = hashlib.pbkdf2_hmac(
     "sha256", "0000".encode("utf-8"), salt, 100000, dklen=128
-)
-hash_mdp = salt + key
+    )
+    hash_mdp.append(salt + key)
 
 # Insertion de quelques utilisateurs
 
-for user in [["alix", hash_mdp, "direction générale", "", "", "directeur général"],
-        ["andrea", hash_mdp, "direction générale", "", "", "directeur des achats"],
-        ["sacha", hash_mdp, "A", "", "", "responsable site"],
-        ["alex", hash_mdp, "A", "", "", "responsable appro site"],
-        ["charlie", hash_mdp, "A", "A1", "", "responsable chaine"],
-        ["camille", hash_mdp, "A", "A1", "préparation", "pilote de ligne"]]:
+for user in [["alix", hash_mdp[0], "direction générale", "", "", "directeur général"],
+        ["andrea", hash_mdp[1], "direction générale", "", "", "directeur des achats"],
+        ["sacha", hash_mdp[2], "B", "", "", "responsable de site"],
+        ["alex", hash_mdp[3], "B", "", "", "responsable appro site"],
+        ["charlie", hash_mdp[4], "B", "B1", "", "responsable de chaine"],
+        ["camille", hash_mdp[5], "B", "B1", "préparation", "responsable de ligne"]]:
     cur.execute(
         """INSERT INTO utilisateurs (
                 identifiant,
@@ -163,13 +165,13 @@ for site in ["direction générale", "A", "B", "C"]:
 
 cur.execute(
     """CREATE TABLE IF NOT EXISTS chaines
-            (chaine TEXT PRIMARY KEY)"""
+            (chaine TEXT PRIMARY KEY, site TEXT)"""
 )
 
 # Insertion de chaines
 
-for chaine in ["A1", "B1", "B2", "B3", "C1", "C2"]:
-    cur.execute("""INSERT INTO chaines (chaine) VALUES (?)""", (chaine,))
+for chaine in [["A1", "A"], ["B1", "B"], ["B2", "B"], ["B3", "B"], ["C1", "C"], ["C2", "C"]]:
+    cur.execute("""INSERT INTO chaines (chaine, site) VALUES (?, ?)""", (chaine[0], chaine[1]))
 
 # Création de la table lignes si elle n'existe pas
 
