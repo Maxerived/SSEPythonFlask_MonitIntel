@@ -75,13 +75,13 @@ def sub_to_devices(username):
     for device in devices:
         pub.subscribe(listener, device)
 
-'''
+
 X = {}
 Y = {}
 appareils = get_devices_seen("alix")
 for appareil in appareils:
-    X[appareil] = deque(maxlen = 5)
-    Y[appareil] = deque(maxlen = 5)
+    X[appareil] = deque(maxlen = 10)
+    Y[appareil] = deque(maxlen = 10)
 
 
 def listener(topic = None, data = None):
@@ -92,7 +92,7 @@ def listener(topic = None, data = None):
     anomaly = data.split(';')[2]
     print(X[topic], Y[topic])
 
-
+'''
 sub_to_devices("sacha")
 
 if sys.argv[1] is not None:
@@ -130,5 +130,5 @@ else:
         time.sleep((date_time[1]-date_time[0]).seconds/60)
         date_time[0] = date_time[1]
         pub.sendMessage(topic, topic = topic, data = lines[i][:-2])
-
 '''
+
