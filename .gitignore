@@ -6,3 +6,5 @@ __pycache__/pubsub.cpython-39.pyc
 __pycache__/login.cpython-39.pyc
 __pycache__/send_data.cpython-39.pyc
 .DS_Store
+__pycache__/getdata.cpython-39.pyc
+

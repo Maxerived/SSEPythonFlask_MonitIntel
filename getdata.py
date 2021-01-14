@@ -11,11 +11,93 @@ from pubsub import pub
 # Détermine le nombre de valeurs glissantes prises en compte pour le graphe
 quelen = 5
 
-# Détermine le facteur d'accélération d'afficahe des données
+# Détermine le facteur d'accélération d'envoi des données
 acc_fact = 1
 
 # Détermine le nombre de données envoyées
 nb_data = 20
+
+
+def get_hash_from_db(identifiant):
+
+    # Connexion à la base de données
+
+    conn = sqlite3.connect("profils_utilisateurs.db")
+    cur = conn.cursor()
+    print("Connexion réussie à SQLite")
+
+    # Récupération du hash_mdp à partir de l'identifiant
+
+    cur.execute(
+        "SELECT hash_mdp FROM utilisateurs WHERE identifiant = ?", (identifiant,)
+    )
+    res = cur.fetchall()
+
+    # Fermeture de la base de données
+
+    cur.close()
+    conn.close()
+    print("Connexion SQlite fermée")
+
+    if len(res) == 0:
+        return None
+    
+    return res[0][0]
+
+
+def get_fields_data():
+
+   # Connexion à la base de données
+
+    conn = sqlite3.connect("profils_utilisateurs.db")
+    cur = conn.cursor()
+    print("Connexion réussie à SQLite")
+
+    # Récupération des données
+
+    postes = []
+    cur.execute("SELECT poste FROM postes")
+    res = cur.fetchall()
+    for poste in res:
+        postes.append(poste[0])
+    sites = []
+    cur.execute("SELECT site FROM sites")
+    res = cur.fetchall()
+    for site in res:
+        sites.append(site[0])
+    chaines = []
+    cur.execute("SELECT chaine FROM chaines")
+    res = cur.fetchall()
+    for chaine in res:
+        chaines.append(chaine[0])
+    lignes = []
+    cur.execute("SELECT ligne FROM lignes")
+    res = cur.fetchall()
+    for ligne in res:
+        lignes.append(ligne[0])
+    types = []
+    cur.execute("SELECT type_appareil FROM types_appareil")
+    res = cur.fetchall()
+    for type_appareil in res:
+        types.append(type_appareil[0])
+    types_descr = []
+    cur.execute("SELECT description FROM types_appareil")
+    res = cur.fetchall()
+    for type_descr in res:
+        types_descr.append(type_descr[0])
+    nivs_resp = []
+    cur.execute("SELECT niv_resp FROM niveau_resp")
+    res = cur.fetchall()
+    for niv_resp in res:
+        nivs_resp.append(niv_resp[0])
+
+    # Fermeture de la base de données
+
+    cur.close()
+    conn.close()
+    print("Connexion SQlite fermée")
+
+    return [postes, sites, chaines, lignes, types, types_descr, nivs_resp]
 
 
 def get_devices_seen(username):
@@ -26,7 +108,8 @@ def get_devices_seen(username):
 
     # Récupération du poste tenu par l'utilisateur
 
-    cur.execute("SELECT site, chaine_service, ligne_de_production, poste_tenu FROM utilisateurs WHERE identifiant = ?", (username,))
+    cur.execute("SELECT site, chaine_service, ligne_de_production, \
+        poste_tenu FROM utilisateurs WHERE identifiant = ?", (username,))
     res = cur.fetchall()[0]
     site = res[0]
     chaine = res[1]
@@ -97,8 +180,8 @@ def listener(topic = None, data = None):
     value = data.split(',')[1]
     Y[topic].append(value)
     anomaly = data.split(',')[2]
-    Z[topic].append(value)
-    print(topic, X[topic], Y[topic], Z[topic])
+    Z[topic].append(anomaly)
+#    print(topic, X[topic], Y[topic], Z[topic])
 
 
 data = {}
@@ -123,6 +206,28 @@ max_data = min(len(data[app]) for app in apps)
 
 nb_sendjobs = len(apps)*nb_data
 executor = ThreadPoolExecutor(nb_sendjobs)
+
+
+def send_appdata_after(delay, app, data):
+    time.sleep(delay)
+    pub.sendMessage(app, topic = app, data = data)
+    
+
+def send_data(data, app, nb_data):
+
+    date_time = [None, None]
+    date_time[0] = datetime.strptime(data[app][0][:-1].split(',')[0], "%d/%m/%Y %H:%M:%S")
+    send_appdata_after(0, app, data[app][0][:-1])
+
+    for i in range(1, nb_data):
+        date_time[1] = datetime.strptime(data[app][i][:-1].split(',')[0], "%d/%m/%Y %H:%M:%S")
+        sleep_time = (date_time[1] - date_time[0]).seconds / acc_fact
+        date_time[0] = date_time[1]
+        send_appdata_after(sleep_time, app, data[app][i][:-1])
+
+for app in apps:
+    executor.submit(send_data, data, app, nb_data)
+
 
 '''
 async def send_appdata_after(delay, app, data):
@@ -154,26 +259,4 @@ async def send_data(data, apps, nb_data):
 
 asyncio.run(send_data(data, apps, nb_data))
 '''
-
-def send_appdata_after(delay, app, data):
-    time.sleep(delay)
-    pub.sendMessage(app, topic = app, data = data)
-    
-
-def send_data(data, app, nb_data):
-
-    date_time = [None, None]
-    date_time[0] = datetime.strptime(data[app][0][:-2].split(',')[0], "%d/%m/%Y %H:%M:%S")
-    send_appdata_after(0, app, data[app][0][:-2])
-
-    for i in range(1, nb_data):
-        date_time[1] = datetime.strptime(data[app][i][:-2].split(',')[0], "%d/%m/%Y %H:%M:%S")
-        sleep_time = (date_time[1] - date_time[0]).seconds / acc_fact
-        date_time[0] = date_time[1]
-        send_appdata_after(sleep_time, app, data[app][i][:-2])
-
-for app in apps:
-    executor.submit(send_data, data, app, nb_data)
-
-
 
