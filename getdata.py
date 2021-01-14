@@ -1,10 +1,22 @@
+import asyncio
+import os
 import time
 import sqlite3
-import sys
 from collections import deque
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from matplotlib import dates
 from pubsub import pub
+
+# Détermine le nombre de valeurs glissantes prises en compte pour le graphe
+quelen = 5
+
+# Détermine le facteur d'accélération d'afficahe des données
+acc_fact = 1
+
+# Détermine le nombre de données envoyées
+nb_data = 20
+
 
 def get_devices_seen(username):
 
@@ -69,66 +81,99 @@ def get_devices_seen(username):
     return appareils
 
 
-def sub_to_devices(username):
-
-    devices = get_devices_seen(username)
-    for device in devices:
-        pub.subscribe(listener, device)
-
-
 X = {}
 Y = {}
+Z = {}
 appareils = get_devices_seen("alix")
 for appareil in appareils:
-    X[appareil] = deque(maxlen = 10)
-    Y[appareil] = deque(maxlen = 10)
+    X[appareil] = deque(maxlen = quelen)
+    Y[appareil] = deque(maxlen = quelen)
+    Z[appareil] = deque(maxlen = quelen)
 
 
 def listener(topic = None, data = None):
-    date_time = datetime.strptime(data.split(';')[0], "%d/%m/%Y %H:%M")
+    date_time = datetime.strptime(data.split(',')[0], "%d/%m/%Y %H:%M:%S")
     X[topic].append(dates.date2num(date_time))
-    value = data.split(';')[1]
+    value = data.split(',')[1]
     Y[topic].append(value)
-    anomaly = data.split(';')[2]
-    print(X[topic], Y[topic])
+    anomaly = data.split(',')[2]
+    Z[topic].append(value)
+    print(topic, X[topic], Y[topic], Z[topic])
+
+
+data = {}
+apps = []
+for appareil in appareils:
+    pub.subscribe(listener, appareil)
+    filepath = "devices_data/" + appareil + ".csv"
+    if os.path.isfile(filepath):
+        apps.append(appareil)
+        with open(filepath, "r") as f:
+            data[appareil] = f.readlines()
+        filehead_time = datetime.strptime(data[appareil][1].split(',')[0], "%d/%m/%Y %H:%M:%S")
+        filetail_time = datetime.strptime(data[appareil][-1].split(',')[0], "%d/%m/%Y %H:%M:%S")
+        if filetail_time < filehead_time:
+            data[appareil].reverse()
+            data[appareil] = data[appareil][:-1][:nb_data]
+        elif filetail_time > filehead_time:
+            data[appareil] = data[appareil][1:][:nb_data]
+
+
+max_data = min(len(data[app]) for app in apps)
+
+nb_sendjobs = len(apps)*nb_data
+executor = ThreadPoolExecutor(nb_sendjobs)
 
 '''
-sub_to_devices("sacha")
+async def send_appdata_after(delay, app, data):
+    await asyncio.sleep(delay)
+    pub.sendMessage(app, topic = app, data = data)
+    
 
-if sys.argv[1] is not None:
-    filepath = sys.argv[1]
-    filename = filepath.rsplit('/', 1)[-1]
-    if filename.rsplit('.', 1)[1] == "csv":
-        topic = filename.rsplit('.', 1)[0]
-    else:
-        topic = filename
+async def send_data(data, apps, nb_data):
 
-with open(filepath, "r") as file:
-    lines = file.readlines()
+    date_time = {}
+    sleep_time = {}
+    tasks = {}
+    for app in apps:
+        date_time[app] = [None, None]
+        date_time[app][0] = datetime.strptime(data[app][0][:-2].split(',')[0], "%d/%m/%Y %H:%M:%S")
+        sleep_time[app] = [0]
+        tasks[app] = [asyncio.create_task(send_appdata_after(sleep_time[app][0], app, data[app][0][:-2]))]
+        for i in range(1, nb_data):
+            date_time[app][1] = datetime.strptime(data[app][i][:-2].split(',')[0], "%d/%m/%Y %H:%M:%S")
+            sleep_time[app].append((date_time[app][1] - date_time[app][0]).seconds / acc_fact)
+#            date_time[app][0] = date_time[app][1]
+            tasks[app].append(asyncio.create_task(
+                send_appdata_after(sleep_time[app][i], app, data[app][i][:-2]))
+            )
 
-if len(lines) <= 2:
-    date_time = None
-    value = None
-    anomaly = None
-else:
-    #header = lines[0]
-    #var = header.split()[1]
-    filehead_time = datetime.strptime(lines[1].split(';')[0], "%d/%m/%Y %H:%M")
-    filetail_time = datetime.strptime(lines[-1].split(';')[0], "%d/%m/%Y %H:%M")
-    if filetail_time < filehead_time:
-        lines.reverse()
-        lines = lines[:-1]
-    elif filetail_time > filehead_time:
-        lines = lines[1:]
+    for i in range(nb_data):
+        for app in apps:
+            await tasks[app][i]
+
+asyncio.run(send_data(data, apps, nb_data))
+'''
+
+def send_appdata_after(delay, app, data):
+    time.sleep(delay)
+    pub.sendMessage(app, topic = app, data = data)
+    
+
+def send_data(data, app, nb_data):
 
     date_time = [None, None]
-    pub.sendMessage(topic, topic = topic, data = lines[0][:-2])
-    date_time[0] = datetime.strptime(lines[0][:-2].split(';')[0], "%d/%m/%Y %H:%M")
-    
-    for i in range(1, 10):
-        date_time[1] = datetime.strptime(lines[i][:-2].split(';')[0], "%d/%m/%Y %H:%M")
-        time.sleep((date_time[1]-date_time[0]).seconds/60)
+    date_time[0] = datetime.strptime(data[app][0][:-2].split(',')[0], "%d/%m/%Y %H:%M:%S")
+    send_appdata_after(0, app, data[app][0][:-2])
+
+    for i in range(1, nb_data):
+        date_time[1] = datetime.strptime(data[app][i][:-2].split(',')[0], "%d/%m/%Y %H:%M:%S")
+        sleep_time = (date_time[1] - date_time[0]).seconds / acc_fact
         date_time[0] = date_time[1]
-        pub.sendMessage(topic, topic = topic, data = lines[i][:-2])
-'''
+        send_appdata_after(sleep_time, app, data[app][i][:-2])
+
+for app in apps:
+    executor.submit(send_data, data, app, nb_data)
+
+
 
