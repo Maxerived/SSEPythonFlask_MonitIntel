@@ -1,8 +1,10 @@
 """Fichier principal"""
 
 import hashlib
+import json
 import os
 import queue
+import random
 import secrets
 import sqlite3
 import time
@@ -38,6 +40,7 @@ def index():
 
     if session.get('username') is not None:
         return '''
+            <link rel="icon" type="image/png" href="/static/img/favicon.ico"/>
             <button onclick="window.location.href='/logout';">Logout</button>
             <p>Logged in as %s<p>
         ''' % escape(session['username'])
@@ -326,6 +329,21 @@ def get_data():
 
     return jsonify(data)
 
+
+@app.route('/graph')
+def graph():
+    return render_template('graph.html')
+
+@app.route('/chart-data')
+def chart_data():
+    def generate_random_data():
+        while True:
+            json_data = json.dumps(
+                {'time': datetime.strftime(X['A1_P1'][0], "%Y-%m-%d %H:%M:%S"), 'value' : Y['A1_P1'][0]})
+            yield f"data:{json_data}\n\n"
+            time.sleep(1)
+
+    return Response(generate_random_data(), mimetype='text/event-stream')
 
 
 

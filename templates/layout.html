@@ -1,4 +1,5 @@
 ﻿<!doctype html>
+<link rel="icon" type="image/png" href="/static/img/favicon.ico"/>
 {% with messages = get_flashed_messages() %}
 {% if messages %}
 <ul class=flashes>
@@ -9,6 +10,4 @@
 {% endif %}
 {% endwith %}
 {% block body %}{% endblock %}
-<script type=text/javascript src="{{
-  url_for('static', filename='jquery.js') }}"></script>
   

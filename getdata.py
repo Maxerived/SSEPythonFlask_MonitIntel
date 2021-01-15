@@ -164,6 +164,7 @@ def get_devices_seen(username):
     return appareils
 
 
+
 X = {}
 Y = {}
 Z = {}
@@ -176,7 +177,7 @@ for appareil in appareils:
 
 def listener(topic = None, data = None):
     date_time = datetime.strptime(data.split(',')[0], "%d/%m/%Y %H:%M:%S")
-    X[topic].append(dates.date2num(date_time))
+    X[topic].append(date_time)
     value = data.split(',')[1]
     Y[topic].append(value)
     anomaly = data.split(',')[2]
@@ -228,7 +229,7 @@ def send_data(data, app, nb_data):
 for app in apps:
     executor.submit(send_data, data, app, nb_data)
 
-
+##########################################################################################
 '''
 async def send_appdata_after(delay, app, data):
     await asyncio.sleep(delay)
