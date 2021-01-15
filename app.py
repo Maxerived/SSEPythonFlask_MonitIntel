@@ -38,8 +38,8 @@ def index():
 
     if session.get('username') is not None:
         return '''
-            <p>Logged in as %s<p>
             <button onclick="window.location.href='/logout';">Logout</button>
+            <p>Logged in as %s<p>
         ''' % escape(session['username'])
 
     return redirect(url_for('login'))
