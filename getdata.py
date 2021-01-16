@@ -5,7 +5,6 @@ import sqlite3
 from collections import deque
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
-from matplotlib import dates
 from pubsub import pub
 
 # Détermine le nombre de valeurs glissantes prises en compte pour le graphe
@@ -100,7 +99,7 @@ def get_fields_data():
     return [postes, sites, chaines, lignes, types, types_descr, nivs_resp]
 
 
-def get_devices_seen(username):
+def get_seen_devices(username):
 
     conn = sqlite3.connect("profils_utilisateurs.db")
     cur = conn.cursor()
@@ -164,49 +163,15 @@ def get_devices_seen(username):
     return appareils
 
 
-
-X = {}
-Y = {}
-Z = {}
-appareils = get_devices_seen("alix")
-for appareil in appareils:
-    X[appareil] = deque(maxlen = quelen)
-    Y[appareil] = deque(maxlen = quelen)
-    Z[appareil] = deque(maxlen = quelen)
-
-
 def listener(topic = None, data = None):
-    date_time = datetime.strptime(data.split(',')[0], "%d/%m/%Y %H:%M:%S")
+    date_time = datetime.strftime(
+        datetime.strptime(data.split(',')[0], "%d/%m/%Y %H:%M:%S"), "%Y-%m-%d %H:%M:%S")
     X[topic].append(date_time)
     value = data.split(',')[1]
     Y[topic].append(value)
     anomaly = data.split(',')[2]
     Z[topic].append(anomaly)
 #    print(topic, X[topic], Y[topic], Z[topic])
-
-
-data = {}
-apps = []
-for appareil in appareils:
-    pub.subscribe(listener, appareil)
-    filepath = "devices_data/" + appareil + ".csv"
-    if os.path.isfile(filepath):
-        apps.append(appareil)
-        with open(filepath, "r") as f:
-            data[appareil] = f.readlines()
-        filehead_time = datetime.strptime(data[appareil][1].split(',')[0], "%d/%m/%Y %H:%M:%S")
-        filetail_time = datetime.strptime(data[appareil][-1].split(',')[0], "%d/%m/%Y %H:%M:%S")
-        if filetail_time < filehead_time:
-            data[appareil].reverse()
-            data[appareil] = data[appareil][:-1][:nb_data]
-        elif filetail_time > filehead_time:
-            data[appareil] = data[appareil][1:][:nb_data]
-
-
-max_data = min(len(data[app]) for app in apps)
-
-nb_sendjobs = len(apps)*nb_data
-executor = ThreadPoolExecutor(nb_sendjobs)
 
 
 def send_appdata_after(delay, app, data):
@@ -226,8 +191,54 @@ def send_data(data, app, nb_data):
         date_time[0] = date_time[1]
         send_appdata_after(sleep_time, app, data[app][i][:-1])
 
+
+X = {}
+Y = {}
+Z = {}
+appareils = []
+new_apps = get_seen_devices("alix")
+for appareil in appareils:
+    if appareil not in new_apps:
+        for K in [X, Y, Z]:
+            K.pop(appareil)
+for appareil in new_apps:
+    if appareil not in appareils:
+        for K in [X, Y, Z]:
+            X[appareil] = deque(maxlen = quelen)
+            Y[appareil] = deque(maxlen = quelen)
+            Z[appareil] = deque(maxlen = quelen)
+appareils = new_apps
+
+
+data = {}
+apps = []
+for appareil in appareils:
+    pub.subscribe(listener, appareil)
+    filepath = "devices_data/" + appareil + ".csv"
+    if appareil not in apps and os.path.isfile(filepath):
+        apps.append(appareil)
+        with open(filepath, "r") as f:
+            data[appareil] = f.readlines()
+        filehead_time = datetime.strptime(data[appareil][1].split(',')[0], "%d/%m/%Y %H:%M:%S")
+        filetail_time = datetime.strptime(data[appareil][-1].split(',')[0], "%d/%m/%Y %H:%M:%S")
+        if filetail_time < filehead_time:
+            data[appareil].reverse()
+            data[appareil] = data[appareil][:-1][:nb_data]
+        elif filetail_time > filehead_time:
+            data[appareil] = data[appareil][1:][:nb_data]
+    if appareil in apps and not os.path.isfile(filepath):
+        data.pop(appareil)
+        apps.remove(appareil)
+
+
+nb_sendjobs = len(apps)*nb_data
+executor = ThreadPoolExecutor(nb_sendjobs)
+
 for app in apps:
     executor.submit(send_data, data, app, nb_data)
+
+
+
 
 ##########################################################################################
 '''

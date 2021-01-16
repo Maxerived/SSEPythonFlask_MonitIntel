@@ -317,7 +317,7 @@ def get_data():
 #    if session.get('username') is None:
 #        return redirect(url_for('login'))
 
-#    devices = get_devices_seen(session['username'])
+#    devices = get_seen_devices(session['username'])
 
     data = {}
     for app in ['A1_P1', 'A1_P2', 'A1_T1', 'A1_VM1', 'A1_VT1', 'A1_VT2']:
@@ -339,7 +339,7 @@ def chart_data():
     def generate_random_data():
         while True:
             json_data = json.dumps(
-                {'time': datetime.strftime(X['A1_P1'][0], "%Y-%m-%d %H:%M:%S"), 'value' : Y['A1_P1'][0]})
+                {'time': X['A1_P1'][0], 'value' : Y['A1_P1'][0]})
             yield f"data:{json_data}\n\n"
             time.sleep(1)
 
@@ -437,5 +437,5 @@ def listen():
 
 
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=True, ssl_context=('cert.pem', 'key.pem'))
 
