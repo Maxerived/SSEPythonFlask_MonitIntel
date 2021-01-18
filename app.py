@@ -1,8 +1,10 @@
 """Fichier principal"""
 
 import hashlib
+import json
 import os
 import queue
+import random
 import secrets
 import sqlite3
 import time
@@ -30,33 +32,6 @@ secret = secrets.token_urlsafe(32)
 app.secret_key = secret
 
 
-def get_hash_from_db(identifiant):
-
-    # Connexion à la base de données
-
-    conn = sqlite3.connect("profils_utilisateurs.db")
-    cur = conn.cursor()
-    print("Connexion réussie à SQLite")
-
-    # Récupération du hash_mdp à partir de l'identifiant
-
-    cur.execute(
-        "SELECT hash_mdp FROM utilisateurs WHERE identifiant = ?", (identifiant,)
-    )
-    res = cur.fetchall()
-
-    # Fermeture de la base de données
-
-    cur.close()
-    conn.close()
-    print("Connexion SQlite fermée")
-
-    if len(res) == 0:
-        return None
-    
-    return res[0][0]
-
-
 @app.route("/")
 def index():
 
@@ -65,65 +40,12 @@ def index():
 
     if session.get('username') is not None:
         return '''
-            <p>Logged in as %s<p>
+            <link rel="icon" type="image/png" href="/static/img/favicon.ico"/>
             <button onclick="window.location.href='/logout';">Logout</button>
+            <p>Logged in as %s<p>
         ''' % escape(session['username'])
+
     return redirect(url_for('login'))
-
-
-def get_fields_data():
-
-   # Connexion à la base de données
-
-    conn = sqlite3.connect("profils_utilisateurs.db")
-    cur = conn.cursor()
-    print("Connexion réussie à SQLite")
-
-    # Récupération des données
-
-    postes = []
-    cur.execute("SELECT poste FROM postes")
-    res = cur.fetchall()
-    for poste in res:
-        postes.append(poste[0])
-    sites = []
-    cur.execute("SELECT site FROM sites")
-    res = cur.fetchall()
-    for site in res:
-        sites.append(site[0])
-    chaines = []
-    cur.execute("SELECT chaine FROM chaines")
-    res = cur.fetchall()
-    for chaine in res:
-        chaines.append(chaine[0])
-    lignes = []
-    cur.execute("SELECT ligne FROM lignes")
-    res = cur.fetchall()
-    for ligne in res:
-        lignes.append(ligne[0])
-    types = []
-    cur.execute("SELECT type_appareil FROM types_appareil")
-    res = cur.fetchall()
-    for type_appareil in res:
-        types.append(type_appareil[0])
-    types_descr = []
-    cur.execute("SELECT description FROM types_appareil")
-    res = cur.fetchall()
-    for type_descr in res:
-        types_descr.append(type_descr[0])
-    nivs_resp = []
-    cur.execute("SELECT niv_resp FROM niveau_resp")
-    res = cur.fetchall()
-    for niv_resp in res:
-        nivs_resp.append(niv_resp[0])
-
-    # Fermeture de la base de données
-
-    cur.close()
-    conn.close()
-    print("Connexion SQlite fermée")
-
-    return [postes, sites, chaines, lignes, types, types_descr, nivs_resp]
 
 
 @app.route("/admin")
@@ -386,7 +308,42 @@ def add_post_type():
     return redirect(url_for('admin'))
 
 
+@app.route('/get_data')
+def get_data():
 
+#    if session.get('username') == 'admin':
+#        return redirect(url_for('admin'))
+
+#    if session.get('username') is None:
+#        return redirect(url_for('login'))
+
+#    devices = get_seen_devices(session['username'])
+
+    data = {}
+    for app in ['A1_P1', 'A1_P2', 'A1_T1', 'A1_VM1', 'A1_VT1', 'A1_VT2']:
+        data[app] = {}
+        for i in range(len(X[app])):
+            data[app][i+1] = {}
+            for j, K in [('x', X), ('y', Y), ('z', Z)]:
+                data[app][i+1][j] = K[app][i]
+
+    return jsonify(data)
+
+
+@app.route('/graph')
+def graph():
+    return render_template('graph.html')
+
+@app.route('/chart-data')
+def chart_data():
+    def generate_random_data():
+        while True:
+            json_data = json.dumps(
+                {'time': X['A1_P1'][0], 'value' : Y['A1_P1'][0]})
+            yield f"data:{json_data}\n\n"
+            time.sleep(1)
+
+    return Response(generate_random_data(), mimetype='text/event-stream')
 
 
 
@@ -479,7 +436,6 @@ def listen():
 
 
 
-
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=True, ssl_context=('cert.pem', 'key.pem'))
 
