@@ -64,7 +64,7 @@ def admin():
             data = get_fields_data()
             postes = [""] + data[0]
             sites = [""] + data[1]
-            chaines = [""] + data[2]
+            chaines = data[2] #exception! Choix vide fait dans html, pour limiter les choix selon le site choisi.  
             lignes = [""] + data[3]
             types = [""] + data[4]
             types_descr = [""] + data[5]

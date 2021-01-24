@@ -66,10 +66,11 @@ def get_fields_data():
     for site in res:
         sites.append(site[0])
     chaines = []
-    cur.execute("SELECT chaine FROM chaines")
+    cur.execute("SELECT chaine,site FROM chaines")
     res = cur.fetchall()
-    for chaine in res:
-        chaines.append(chaine[0])
+    # [('A1', 'A'), ('B1', 'B'), ('B2', 'B'), ('B3', 'B'), ('C1', 'C'), ('C2', 'C')]
+    chaines = res
+
     lignes = []
     cur.execute("SELECT ligne FROM lignes")
     res = cur.fetchall()
