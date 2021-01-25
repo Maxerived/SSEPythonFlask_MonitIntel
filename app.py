@@ -346,17 +346,12 @@ def graph():
     return render_template("graph.html")
 
 
-<<<<<<< HEAD
 
 @app.route('/chart-data')
-=======
-@app.route("/chart-data")
->>>>>>> 43ceabe14fb397bd8518e2e9c69a4a0dc150c7e4
 def chart_data():
     def generate_random_data():
         i = 0
         while True:
-<<<<<<< HEAD
             if i > 0:
                 time.sleep((X['A1_P1'][-1] - X['A1_P1'][-2]).seconds)
             i = 1
@@ -373,9 +368,6 @@ def chart_data():
                     }
                 }
             )
-=======
-            json_data = json.dumps({"time": X["A1_P1"][0], "value": Y["A1_P1"][0]})
->>>>>>> 43ceabe14fb397bd8518e2e9c69a4a0dc150c7e4
             yield f"data:{json_data}\n\n"
 
     return Response(generate_random_data(), mimetype="text/event-stream")
