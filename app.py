@@ -11,13 +11,11 @@ import time
 import webbrowser as wb
 from collections import deque
 from datetime import datetime
-from getdata import *
-from matplotlib import dates, pyplot
-from pubsub import pub
+
 from flask import (
-    escape,
     Flask,
     Response,
+    escape,
     jsonify,
     redirect,
     render_template,
@@ -25,6 +23,10 @@ from flask import (
     session,
     url_for,
 )
+
+from pubsub import pub
+
+from getdata import *
 
 app = Flask(__name__)
 
@@ -35,32 +37,34 @@ app.secret_key = secret
 @app.route("/")
 def index():
 
-    if session.get('username') == 'admin':
-        return redirect(url_for('admin'))
+    if session.get("username") == "admin":
+        return redirect(url_for("admin"))
 
-    if session.get('username') is not None:
-        return '''
+    if session.get("username") is not None:
+        return """
             <link rel="icon" type="image/png" href="/static/img/favicon.ico"/>
             <button onclick="window.location.href='/logout';">Logout</button>
             <p>Logged in as %s<p>
-        ''' % escape(session['username'])
+        """ % escape(
+            session["username"]
+        )
 
-    return redirect(url_for('login'))
+    return redirect(url_for("login"))
 
 
 @app.route("/admin")
 def admin():
 
-    if 'username' in session:
+    if "username" in session:
 
-        if session.get('username') == 'admin':
+        if session.get("username") == "admin":
 
             # Recupération des données à insérer dans les menus déroulants
 
             data = get_fields_data()
             postes = [""] + data[0]
             sites = [""] + data[1]
-            chaines = [""] + data[2]
+            chaines = data[2] #exception! Choix vide fait dans html, pour limiter les choix selon le site choisi.  
             lignes = [""] + data[3]
             types = [""] + data[4]
             types_descr = [""] + data[5]
@@ -70,32 +74,34 @@ def admin():
             for i in range(1, len(types)):
                 types_app.append(types[i] + "_" + types_descr[i])
 
-            return render_template("admin.html",
-                postes = postes,
-                sites = sites,
-                chaines = chaines,            
-                lignes = lignes,
-                types = types_app,
-                nivs_resp = nivs_resp,
-                types_for_poste = types_app + ["TOUS"],
-                error = session.get('error'))
+            return render_template(
+                "admin.html",
+                postes=postes,
+                sites=sites,
+                chaines=chaines,
+                lignes=lignes,
+                types=types_app,
+                nivs_resp=nivs_resp,
+                types_for_poste=types_app + ["TOUS"],
+                error=session.get("error"),
+            )
 
-        return redirect(url_for('index'))
+        return redirect(url_for("index"))
 
-    return redirect(url_for('login'))
+    return redirect(url_for("login"))
 
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
 
-    if 'username' in session:
+    if "username" in session:
 
-        if session['username'] == 'admin':
-            return redirect(url_for('admin'))
+        if session["username"] == "admin":
+            return redirect(url_for("admin"))
 
-        return redirect(url_for('index'))
+        return redirect(url_for("index"))
 
-    if request.method == 'POST':
+    if request.method == "POST":
 
         # Récupération des valeurs entrées sur le formlaire
 
@@ -132,25 +138,25 @@ def login():
 
         print("Mot de passe correct")
         error = "Vous êtes authentifié."
-        session['username'] = identifiant
+        session["username"] = identifiant
 
         # Si l'utilisateur est admin
 
         if identifiant == "admin":
-            return redirect(url_for('admin'))
+            return redirect(url_for("admin"))
 
         # Pour un utilisateur lambda
 
-        return redirect(url_for('index'))
+        return redirect(url_for("index"))
 
     return render_template("login.html")
 
 
-@app.route('/logout')
+@app.route("/logout")
 def logout():
-    session.pop('username', None)
-    session.pop('error', None)
-    return redirect(url_for('login'))
+    session.pop("username", None)
+    session.pop("error", None)
+    return redirect(url_for("login"))
 
 
 @app.route("/admin/add_user", methods=["POST"])
@@ -191,14 +197,16 @@ def add_user():
                     chaine_service,
                     ligne_de_production,
                     poste_tenu) VALUES (?, ?, ?, ?, ?, ?)""",
-            (identifiant, hash_mdp, site, chaine, ligne, poste)
+            (identifiant, hash_mdp, site, chaine, ligne, poste),
         )
         error = "Nouvel utilisateur intégré dans la base de données"
         print("Utilisateur intégré dans la base de données avec succès")
 
     except sqlite3.IntegrityError:
         error = "Cet identifiant existe déjà dans la base de données !!!"
-        print("Échec lors de l'insertion d'un nouvel utilisateur : identifiant déjà existant")
+        print(
+            "Échec lors de l'insertion d'un nouvel utilisateur : identifiant déjà existant"
+        )
 
     # Fermeture de la base de données
     finally:
@@ -207,9 +215,9 @@ def add_user():
         conn.close()
         print("Connexion SQlite fermée")
 
-    session['error'] = error
+    session["error"] = error
 
-    return redirect(url_for('admin'))
+    return redirect(url_for("admin"))
 
 
 @app.route("/admin/add_device", methods=["POST"])
@@ -241,14 +249,16 @@ def add_device():
                     site_de_production,
                     chaine_de_production,
                     ligne_de_production) VALUES (?, ?, ?, ?, ?)""",
-            (appareil, type_app, site, chaine, ligne)
+            (appareil, type_app, site, chaine, ligne),
         )
         error = "Nouvel appareil intégré dans la base de données"
         print("Appareil intégré dans la base de données avec succès")
 
     except sqlite3.IntegrityError:
         error = "Cet appareil existe déjà dans la base de données !!!"
-        print("Échec lors de l'insertion d'un nouvel appareil : identifiant déjà existant")
+        print(
+            "Échec lors de l'insertion d'un nouvel appareil : identifiant déjà existant"
+        )
 
     # Fermeture de la base de données
     finally:
@@ -257,9 +267,9 @@ def add_device():
         conn.close()
         print("Connexion SQlite fermée")
 
-    session['error'] = error
+    session["error"] = error
 
-    return redirect(url_for('admin'))
+    return redirect(url_for("admin"))
 
 
 @app.route("/admin/add_post_type", methods=["POST"])
@@ -287,14 +297,16 @@ def add_post_type():
                     (poste,
                     niveau_de_responsabilite,
                     appareils_vus) VALUES (?, ?, ?)""",
-            (poste, niv_resp, type_for_poste)
+            (poste, niv_resp, type_for_poste),
         )
         error = "Nouveau type de poste intégré dans la base de données"
         print("Type de poste intégré dans la base de données avec succès")
 
     except sqlite3.IntegrityError:
         error = "Ce type de poste existe déjà dans la base de données !!!"
-        print("Échec lors de l'insertion d'un nouveau type de poste : identifiant déjà existant")
+        print(
+            "Échec lors de l'insertion d'un nouveau type de poste : identifiant déjà existant"
+        )
 
     # Fermeture de la base de données
     finally:
@@ -303,52 +315,52 @@ def add_post_type():
         conn.close()
         print("Connexion SQlite fermée")
 
-    session['error'] = error
+    session["error"] = error
 
-    return redirect(url_for('admin'))
+    return redirect(url_for("admin"))
 
 
-@app.route('/get_data')
+@app.route("/get_data")
 def get_data():
 
-#    if session.get('username') == 'admin':
-#        return redirect(url_for('admin'))
+    #    if session.get('username') == 'admin':
+    #        return redirect(url_for('admin'))
 
-#    if session.get('username') is None:
-#        return redirect(url_for('login'))
+    #    if session.get('username') is None:
+    #        return redirect(url_for('login'))
 
-#    devices = get_seen_devices(session['username'])
+    #    devices = get_seen_devices(session['username'])
 
     data = {}
-    for app in ['A1_P1', 'A1_P2', 'A1_T1', 'A1_VM1', 'A1_VT1', 'A1_VT2']:
+    for app in ["A1_P1", "A1_P2", "A1_T1", "A1_VM1", "A1_VT1", "A1_VT2"]:
         data[app] = {}
         for i in range(len(X[app])):
-            data[app][i+1] = {}
-            for j, K in [('x', X), ('y', Y), ('z', Z)]:
-                data[app][i+1][j] = K[app][i]
+            data[app][i + 1] = {}
+            for j, K in [("x", X), ("y", Y), ("z", Z)]:
+                data[app][i + 1][j] = K[app][i]
 
     return jsonify(data)
 
 
-@app.route('/graph')
+@app.route("/graph")
 def graph():
-    return render_template('graph.html')
+    return render_template("graph.html")
 
-@app.route('/chart-data')
+
+@app.route("/chart-data")
 def chart_data():
     def generate_random_data():
         while True:
-            json_data = json.dumps(
-                {'time': X['A1_P1'][0], 'value' : Y['A1_P1'][0]})
+            json_data = json.dumps({"time": X["A1_P1"][0], "value": Y["A1_P1"][0]})
             yield f"data:{json_data}\n\n"
             time.sleep(1)
 
-    return Response(generate_random_data(), mimetype='text/event-stream')
-
+    return Response(generate_random_data(), mimetype="text/event-stream")
 
 
 #############################################################################################@
 #############################################################################################@
+
 
 class MessageAnnouncer:
     def __init__(self):
@@ -383,7 +395,7 @@ def format_sse(data: str, event=None) -> str:
 def get_values(input_data):
     input_data = str(input_data)
     input_var_elem = input_data.rsplit(".", 1)
-#    var = input_var_elem[0]
+    #    var = input_var_elem[0]
     if len(input_var_elem) > 1:
         extension = input_data.rsplit(".", 1)[1].lower()
         if extension not in {"csv", "tsv"}:
@@ -394,8 +406,8 @@ def get_values(input_data):
             if len(lines) <= 2:
                 data = lines[1].split()[2]
             header = lines[0]
-#            mesured_var = header.split()[1]
-#             			print(mesured_var)
+            #            mesured_var = header.split()[1]
+            #             			print(mesured_var)
             filehead_time = datetime.strptime(
                 " ".join(lines[1].split()[:2]), "%d/%m/%Y %H:%M:%S"
             )
@@ -431,11 +443,9 @@ def listen():
 #############################################################################################@
 
 
-#dates = matplotlib.dates.date2num(list_of_datetimes)
-#matplotlib.pyplot.plot_date(dates, values)
+# dates = matplotlib.dates.date2num(list_of_datetimes)
+# matplotlib.pyplot.plot_date(dates, values)
 
 
-
-if __name__ == '__main__':
-    app.run(debug=True, ssl_context=('cert.pem', 'key.pem'))
-
+if __name__ == "__main__":
+    app.run(debug=True, ssl_context=("cert.pem", "key.pem"))

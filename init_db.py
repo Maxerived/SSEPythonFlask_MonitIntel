@@ -1,9 +1,8 @@
 """This module is for creating the database of the flask applicaiton"""
-import sqlite3
-import os
-import hashlib
 import getpass
-
+import hashlib
+import os
+import sqlite3
 
 # Détermination d'un mot de passe admin au démarrage
 
@@ -65,25 +64,25 @@ cur.execute(
                 chaine_service,
                 ligne_de_production,
                 poste_tenu) VALUES (?, ?, ?, ?, ?, ?)""",
-        ("admin", hash_mdp, "direction_generale", "DSI", "", "directeur SI")
-    )
+    ("admin", hash_mdp, "direction_generale", "DSI", "", "directeur SI"),
+)
 
 hash_mdp = []
 for i in range(6):
     salt = os.urandom(32)
-    key = hashlib.pbkdf2_hmac(
-    "sha256", "0000".encode("utf-8"), salt, 100000, dklen=128
-    )
+    key = hashlib.pbkdf2_hmac("sha256", "0000".encode("utf-8"), salt, 100000, dklen=128)
     hash_mdp.append(salt + key)
 
 # Insertion de quelques utilisateurs
 
-for user in [["alix", hash_mdp[0], "direction générale", "", "", "directeur général"],
-        ["andrea", hash_mdp[1], "direction générale", "", "", "directeur des achats"],
-        ["sacha", hash_mdp[2], "B", "", "", "responsable de site"],
-        ["alex", hash_mdp[3], "B", "", "", "responsable appro site"],
-        ["charlie", hash_mdp[4], "B", "B1", "", "responsable de chaine"],
-        ["camille", hash_mdp[5], "B", "B1", "préparation", "responsable de ligne"]]:
+for user in [
+    ["alix", hash_mdp[0], "direction générale", "", "", "directeur général"],
+    ["andrea", hash_mdp[1], "direction générale", "", "", "directeur des achats"],
+    ["sacha", hash_mdp[2], "B", "", "", "responsable de site"],
+    ["alex", hash_mdp[3], "B", "", "", "responsable appro site"],
+    ["charlie", hash_mdp[4], "B", "B1", "", "responsable de chaine"],
+    ["camille", hash_mdp[5], "B", "B1", "préparation", "responsable de ligne"],
+]:
     cur.execute(
         """INSERT INTO utilisateurs (
                 identifiant,
@@ -93,7 +92,7 @@ for user in [["alix", hash_mdp[0], "direction générale", "", "", "directeur g�
                 ligne_de_production,
                 poste_tenu)
         VALUES (?, ?, ?, ?, ?, ?)""",
-        (user[0], user[1], user[2], user[3], user[4], user[5])
+        (user[0], user[1], user[2], user[3], user[4], user[5]),
     )
 
 # Création de la table appareils si elle n'existe pas
@@ -113,18 +112,20 @@ cur.execute(
 # Insertion d'appareils
 
 for chaine in ["A1", "B1", "B2", "B3", "C1", "C2"]:
-    for appareil in [[chaine + "_P1", "P1", chaine[0], chaine, "préparation"],
+    for appareil in [
+        [chaine + "_P1", "P1", chaine[0], chaine, "préparation"],
         [chaine + "_VM1", "VM1", chaine[0], chaine, "préparation"],
         [chaine + "_VT1", "VT1", chaine[0], chaine, "préparation"],
         [chaine + "_T1", "T1", chaine[0], chaine, "cuisson"],
         [chaine + "_VT2", "VT2", chaine[0], chaine, "cuisson"],
-        [chaine + "_P2", "P2", chaine[0], chaine, "emballage"]]:
+        [chaine + "_P2", "P2", chaine[0], chaine, "emballage"],
+    ]:
         cur.execute(
             """INSERT INTO appareils
             (appareil, type, site_de_production, chaine_de_production, ligne_de_production)
             VALUES (?, ?, ?, ?, ?)""",
             (appareil[0], appareil[1], appareil[2], appareil[3], appareil[4]),
-            )
+        )
 
 # Création de la table postes si elle n'existe pas
 
@@ -137,17 +138,19 @@ cur.execute(
 
 # Insertion de postes
 
-for poste in [["directeur général", "direction générale", "TOUS"],
+for poste in [
+    ["directeur général", "direction générale", "TOUS"],
     ["directeur des achats", "direction générale", "P1"],
     ["responsable de site", "site", "TOUS"],
     ["responsable appro site", "site", "P1"],
     ["responsable de chaine", "chaine", "TOUS"],
-    ["responsable de ligne", "ligne", "TOUS"]]:
+    ["responsable de ligne", "ligne", "TOUS"],
+]:
     cur.execute(
         """INSERT INTO postes
             (poste, niveau_de_responsabilite, appareils_vus) VALUES (?, ?, ?)""",
-            (poste[0], poste[1], poste[2]),
-        )
+        (poste[0], poste[1], poste[2]),
+    )
 
 # Création de la table sites si elle n'existe pas
 
@@ -170,8 +173,17 @@ cur.execute(
 
 # Insertion de chaines
 
-for chaine in [["A1", "A"], ["B1", "B"], ["B2", "B"], ["B3", "B"], ["C1", "C"], ["C2", "C"]]:
-    cur.execute("""INSERT INTO chaines (chaine, site) VALUES (?, ?)""", (chaine[0], chaine[1]))
+for chaine in [
+    ["A1", "A"],
+    ["B1", "B"],
+    ["B2", "B"],
+    ["B3", "B"],
+    ["C1", "C"],
+    ["C2", "C"],
+]:
+    cur.execute(
+        """INSERT INTO chaines (chaine, site) VALUES (?, ?)""", (chaine[0], chaine[1])
+    )
 
 # Création de la table lignes si elle n'existe pas
 
@@ -195,15 +207,19 @@ cur.execute(
 
 # Insertion de types d'appareil
 
-for type_appareil in [["P1", "Poids cuve matière première"],
+for type_appareil in [
+    ["P1", "Poids cuve matière première"],
     ["VM1", "Vitesse malaxage"],
     ["VT1", "Vitesse tapis ligne préparation"],
     ["T1", "Température four"],
     ["VT2", "Vitesse tapis ligne cuisson"],
-    ["P2", "Poids produit fini"]]:
-    cur.execute("""INSERT INTO types_appareil
+    ["P2", "Poids produit fini"],
+]:
+    cur.execute(
+        """INSERT INTO types_appareil
         (type_appareil, description) VALUES (?, ?)""",
-        (type_appareil[0], type_appareil[1]))
+        (type_appareil[0], type_appareil[1]),
+    )
 
 # Création de la table niveau_resp si elle n'existe pas
 
@@ -214,7 +230,7 @@ cur.execute(
 
 # Insertion de types d'appareil
 
-for niv_resp in ["direction générale","site", "chaine", "ligne"]:
+for niv_resp in ["direction générale", "site", "chaine", "ligne"]:
     cur.execute("""INSERT INTO niveau_resp (niv_resp) VALUES (?)""", (niv_resp,))
 
 cur.close()
