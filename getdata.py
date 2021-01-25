@@ -1,11 +1,12 @@
 import asyncio
 import dateutil.parser
 import os
-import time
 import sqlite3
+import time
 from collections import deque
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
+
 from pubsub import pub
 
 # Détermine le nombre de valeurs glissantes dans les deques X, Y et Z
@@ -41,13 +42,13 @@ def get_hash_from_db(identifiant):
 
     if len(res) == 0:
         return None
-    
+
     return res[0][0]
 
 
 def get_fields_data():
 
-   # Connexion à la base de données
+    # Connexion à la base de données
 
     conn = sqlite3.connect("profils_utilisateurs.db")
     cur = conn.cursor()
@@ -66,10 +67,11 @@ def get_fields_data():
     for site in res:
         sites.append(site[0])
     chaines = []
-    cur.execute("SELECT chaine FROM chaines")
+    cur.execute("SELECT chaine,site FROM chaines")
     res = cur.fetchall()
-    for chaine in res:
-        chaines.append(chaine[0])
+    # [('A1', 'A'), ('B1', 'B'), ('B2', 'B'), ('B3', 'B'), ('C1', 'C'), ('C2', 'C')]
+    chaines = res
+
     lignes = []
     cur.execute("SELECT ligne FROM lignes")
     res = cur.fetchall()
@@ -108,8 +110,11 @@ def get_seen_devices(username):
 
     # Récupération du poste tenu par l'utilisateur
 
-    cur.execute("SELECT site, chaine_service, ligne_de_production, \
-        poste_tenu FROM utilisateurs WHERE identifiant = ?", (username,))
+    cur.execute(
+        "SELECT site, chaine_service, ligne_de_production, \
+        poste_tenu FROM utilisateurs WHERE identifiant = ?",
+        (username,),
+    )
     res = cur.fetchall()[0]
     site = res[0]
     chaine = res[1]
@@ -118,12 +123,15 @@ def get_seen_devices(username):
 
     # Récupération des types d'appareil en visibilité par l'utilisateur
 
-    cur.execute("SELECT niveau_de_responsabilite, appareils_vus FROM postes \
-        WHERE poste = ?", (poste,))
+    cur.execute(
+        "SELECT niveau_de_responsabilite, appareils_vus FROM postes \
+        WHERE poste = ?",
+        (poste,),
+    )
     res = cur.fetchall()[0]
     niv_resp = res[0]
     type_app = res[1]
-    
+
     types_app = []
     if type_app == "TOUS":
         cur.execute("SELECT type_appareil FROM types_appareil")
@@ -138,19 +146,28 @@ def get_seen_devices(username):
         if niv_resp == "direction générale":
             cur.execute("SELECT appareil FROM appareils WHERE type = ?", (type_app,))
         elif niv_resp == "site":
-            cur.execute("SELECT appareil FROM appareils \
-                WHERE type = ? AND site_de_production = ?", (type_app, site))
+            cur.execute(
+                "SELECT appareil FROM appareils \
+                WHERE type = ? AND site_de_production = ?",
+                (type_app, site),
+            )
         elif niv_resp == "chaine":
-            cur.execute("SELECT appareil FROM appareils WHERE type = ? \
+            cur.execute(
+                "SELECT appareil FROM appareils WHERE type = ? \
                 AND site_de_production = ? \
-                AND chaine_de_production = ?", (type_app, site, chaine))
+                AND chaine_de_production = ?",
+                (type_app, site, chaine),
+            )
         elif niv_resp == "ligne":
-            cur.execute("SELECT appareil FROM appareils WHERE type = ? \
+            cur.execute(
+                "SELECT appareil FROM appareils WHERE type = ? \
                 AND site_de_production = ? \
                 AND chaine_de_production = ? \
-                AND ligne_de_production = ?", (type_app, site, chaine, ligne))
+                AND ligne_de_production = ?",
+                (type_app, site, chaine, ligne),
+            )
         res.append(cur.fetchall())
-    
+
     cur.close()
     print("Appareils de l'utilisateur {} récupérés".format(username))
     conn.close()
@@ -164,29 +181,60 @@ def get_seen_devices(username):
     return appareils
 
 
+<<<<<<< HEAD
 def listener(topic = None, data = None):
     date_time = dateutil.parser.parse(data.split(',')[0])
+=======
+def listener(topic=None, data=None):
+    date_time = datetime.strftime(
+        datetime.strptime(data.split(",")[0], "%d/%m/%Y %H:%M:%S"), "%Y-%m-%d %H:%M:%S"
+    )
+>>>>>>> 43ceabe14fb397bd8518e2e9c69a4a0dc150c7e4
     X[topic].append(date_time)
-    value = data.split(',')[1]
+    value = data.split(",")[1]
     Y[topic].append(value)
+<<<<<<< HEAD
     anomaly = data.split(',')[2]
     Z[topic].append(anomaly.lower())
+=======
+    anomaly = data.split(",")[2]
+    Z[topic].append(anomaly)
+
+
+>>>>>>> 43ceabe14fb397bd8518e2e9c69a4a0dc150c7e4
 #    print(topic, X[topic], Y[topic], Z[topic])
 
 
 def send_appdata_after(delay, app, appdata):
     time.sleep(delay)
+<<<<<<< HEAD
     pub.sendMessage(app, topic = app, data = appdata)
     
+=======
+    pub.sendMessage(app, topic=app, data=data)
+
+>>>>>>> 43ceabe14fb397bd8518e2e9c69a4a0dc150c7e4
 
 def send_data(data, app, nb_data):
 
     date_time = [None, None]
+<<<<<<< HEAD
     date_time[0] = dateutil.parser.parse(data[app][0][:-1].split(',')[0])
     send_appdata_after(0, app, data[app][0][:-1])
 
     for i in range(1, nb_data):
         date_time[1] = dateutil.parser.parse(data[app][i][:-1].split(',')[0])
+=======
+    date_time[0] = datetime.strptime(
+        data[app][0][:-1].split(",")[0], "%d/%m/%Y %H:%M:%S"
+    )
+    send_appdata_after(0, app, data[app][0][:-1])
+
+    for i in range(1, nb_data):
+        date_time[1] = datetime.strptime(
+            data[app][i][:-1].split(",")[0], "%d/%m/%Y %H:%M:%S"
+        )
+>>>>>>> 43ceabe14fb397bd8518e2e9c69a4a0dc150c7e4
         sleep_time = (date_time[1] - date_time[0]).seconds / acc_fact
         date_time[0] = date_time[1]
         send_appdata_after(sleep_time, app, data[app][i][:-1])
@@ -204,7 +252,13 @@ for appareil in appareils:
 for appareil in new_apps:
     if appareil not in appareils:
         for K in [X, Y, Z]:
+<<<<<<< HEAD
             K[appareil] = deque(maxlen = quelen)
+=======
+            X[appareil] = deque(maxlen=quelen)
+            Y[appareil] = deque(maxlen=quelen)
+            Z[appareil] = deque(maxlen=quelen)
+>>>>>>> 43ceabe14fb397bd8518e2e9c69a4a0dc150c7e4
 appareils = new_apps
 
 
@@ -217,8 +271,17 @@ for appareil in appareils:
         apps.append(appareil)
         with open(filepath, "r") as f:
             data[appareil] = f.readlines()
+<<<<<<< HEAD
         filehead_time = dateutil.parser.parse(data[appareil][1].split(',')[0])
         filetail_time = dateutil.parser.parse(data[appareil][-1].split(',')[0])
+=======
+        filehead_time = datetime.strptime(
+            data[appareil][1].split(",")[0], "%d/%m/%Y %H:%M:%S"
+        )
+        filetail_time = datetime.strptime(
+            data[appareil][-1].split(",")[0], "%d/%m/%Y %H:%M:%S"
+        )
+>>>>>>> 43ceabe14fb397bd8518e2e9c69a4a0dc150c7e4
         if filetail_time < filehead_time:
             data[appareil].reverse()
             data[appareil] = data[appareil][:-1][:nb_data]
@@ -229,17 +292,15 @@ for appareil in appareils:
         apps.remove(appareil)
 
 
-nb_sendjobs = len(apps)*nb_data
+nb_sendjobs = len(apps) * nb_data
 executor = ThreadPoolExecutor(nb_sendjobs)
 
 for app in apps:
     executor.submit(send_data, data, app, nb_data)
 
 
-
-
 ##########################################################################################
-'''
+"""
 async def send_appdata_after(delay, app, data):
     await asyncio.sleep(delay)
     pub.sendMessage(app, topic = app, data = data)
@@ -268,5 +329,4 @@ async def send_data(data, apps, nb_data):
             await tasks[app][i]
 
 asyncio.run(send_data(data, apps, nb_data))
-'''
-
+"""

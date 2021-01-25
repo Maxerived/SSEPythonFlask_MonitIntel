@@ -1,6 +1,6 @@
 {% extends "layout.html" %} {% block body %}
 <html>
-    
+
 <head>
     <title>Page administrateur</title>
     <meta charset="utf-8">
@@ -11,6 +11,7 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <!--Custom styles-->
     <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='styles/admin.css') }}">
+    <script src="{{ url_for('static',filename='js/admin.js') }}"></script>
 </head>
 
 <body onload="openFirstForm()">
@@ -55,7 +56,7 @@
                     <br>
                     <select class="form-control" name="poste">
                         {% for poste in postes %}
-                            <option value= "{{poste}}">{{poste}}</option>"
+                        <option value="{{poste}}">{{poste}}</option>
                         {% endfor %}
                     </select>
                     <br>
@@ -63,17 +64,19 @@
                 <div class="col-6">
                     <label for="site"><b>Site</b></label>
                     <br>
-                    <select class="form-control" name="site">
+                    <select class="form-control" name="site" id="adduser-site" onchange="changeChaine('adduser')">
                         {% for site in sites %}
-                            <option value= "{{site}}">{{site}}</option>"
+                        <option value="{{site}}">{{site}}</option>
                         {% endfor %}
                     </select>
                     <br>
                     <label for="chaine"><b>Chaine/Service</b></label>
                     <br>
-                    <select class="form-control" name="chaine">
+                    <select class="form-control" name="chaine" id="adduser-chaine">
+                        <option value=""></option>
                         {% for chaine in chaines %}
-                            <option value= "{{chaine}}">{{chaine}}</option>"
+                        <option name="adduser{{chaine[1]}}" value="{{chaine[0]}}" style="display: none;">{{chaine[0]}}
+                        </option>
                         {% endfor %}
                     </select>
                     <br>
@@ -81,7 +84,7 @@
                     <br>
                     <select class="form-control" name="ligne">
                         {% for ligne in lignes %}
-                            <option value= "{{ligne}}">{{ligne}}</option>"
+                        <option value="{{ligne}}">{{ligne}}</option>
                         {% endfor %}
                     </select>
                     <br>
@@ -112,15 +115,15 @@
                     <br>
                     <select class="form-control" name="type">
                         {% for type_app in types %}
-                            <option value= "{{type_app}}">{{type_app}}</option>"
+                        <option value="{{type_app}}">{{type_app}}</option>
                         {% endfor %}
                     </select>
                     <br>
                     <label for="site"><b>Site de production</b></label>
                     <br>
-                    <select class="form-control" name="site">
+                    <select class="form-control" name="site" id="adddevice-site" onchange="changeChaine('adddevice')">
                         {% for site in sites %}
-                            <option value= "{{site}}">{{site}}</option>"
+                        <option value="{{site}}">{{site}}</option>
                         {% endfor %}
                     </select>
                     <br>
@@ -128,9 +131,11 @@
                 <div class="col-6">
                     <label for="chaine"><b>Chaine de production</b></label>
                     <br>
-                    <select class="form-control" name="chaine">
+                    <select class="form-control" name="chaine" id="adddevice-chaine">
+                        <option value=""></option>
                         {% for chaine in chaines %}
-                            <option value= "{{chaine}}">{{chaine}}</option>"
+                        <option name="adddevice{{chaine[1]}}" value="{{chaine[0]}}" style="display: none;">{{chaine[0]}}
+                        </option>
                         {% endfor %}
                     </select>
                     <br>
@@ -138,7 +143,7 @@
                     <br>
                     <select class="form-control" name="ligne">
                         {% for ligne in lignes %}
-                            <option value= "{{ligne}}">{{ligne}}</option>"
+                        <option value="{{ligne}}">{{ligne}}</option>
                         {% endfor %}
                     </select>
                     <br>
@@ -169,7 +174,7 @@
                     <br>
                     <select class="form-control" name="niv_resp">
                         {% for niv_resp in nivs_resp %}
-                            <option value= "{{niv_resp}}">{{niv_resp}}</option>"
+                        <option value="{{niv_resp}}">{{niv_resp}}</option>
                         {% endfor %}
                     </select>
                     <br>
@@ -177,7 +182,7 @@
                     <br>
                     <select class="form-control" name="type_for_poste">
                         {% for type_for_poste in types_for_poste %}
-                            <option value= "{{type_for_poste}}">{{type_for_poste}}</option>"
+                        <option value="{{type_for_poste}}">{{type_for_poste}}</option>
                         {% endfor %}
                     </select>
                     <br>
@@ -195,32 +200,6 @@
             </div>
         </form>
     </div>
-
-    <script>
-        function openFirstForm() {
-            var tabcontent;
-            var navitem;
-            tabcontent = document.getElementsByClassName("tabcontent");
-            navitem = document.getElementsByClassName("nav-item");
-
-            tabcontent[0].style.display = "block";
-            navitem[0].className += " active";
-        }
-
-        function openForm(evt, cityName) {
-            var i, tabcontent, navitem;
-            tabcontent = document.getElementsByClassName("tabcontent");
-            for (i = 0; i < tabcontent.length; i++) {
-                tabcontent[i].style.display = "none";
-            }
-            navitem = document.getElementsByClassName("nav-item");
-            for (i = 0; i < navitem.length; i++) {
-                navitem[i].className = navitem[i].className.replace(" active", "");
-            }
-            document.getElementById(cityName).style.display = "block";
-            evt.currentTarget.className += " active";
-        }
-    </script>
 </body>
 
 </html>
