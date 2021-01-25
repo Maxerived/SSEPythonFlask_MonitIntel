@@ -1,6 +1,5 @@
 import time
 import requests
-import 
 
 '''
 while True:
@@ -41,5 +40,36 @@ def tsv_to_csv(filepath):
     with open(new_filepath, 'w') as file:
         for line in new_lines:
             file.write(line)
+
+
+from pubsub import pub
+
+class listener:
+
+    data_list = []
+
+    def __init__(self, *args):
+        self.data_list.append(*args)
+
+    def __call__(self):
+        self.data_list.append(data)
+
+    def display(self):
+        return self.data_list
+
+
+
+'''
+    def listen(self):
+        self.data_list.append(data)
+        return data_list
+
+    def announce(self, msg):
+        for i in reversed(range(len(self.listeners))):
+            try:
+                self.listeners[i].put_nowait(msg)
+            except queue.Full:
+                del self.listeners[i]
+'''
 
 

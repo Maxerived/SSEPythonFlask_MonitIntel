@@ -17,6 +17,15 @@
             </div>
         </div>
     </div>
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <canvas id="canvas2"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 <!--suppress JSUnresolvedLibraryURL -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
@@ -27,22 +36,71 @@
 <script>
     $(document).ready(function () {
         const config = {
-            type: 'line',
+            type: 'bar',
             data: {
                 labels: [],
                 datasets: [{
-                    label: "Random Dataset",
-                    backgroundColor: 'rgb(255, 99, 132)',
-                    borderColor: 'rgb(255, 99, 132)',
+                    label: "Capteur A1_P1",
+                    backgroundColor: [],
+                    borderColor: [],
                     data: [],
                     fill: false,
+                    pointBorderColor: [],
+                    pointBackgroundColor: [],
                 }],
             },
             options: {
                 responsive: true,
                 title: {
                     display: true,
-                    text: 'Creating Real-Time Charts with Flask'
+                    text: 'Relevé de pression'
+                },
+                tooltips: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                hover: {
+                    mode: 'nearest',
+                    intersect: true
+                },
+                scales: {
+                    xAxes: [{
+                        display: true,
+                        scaleLabel: {
+                            display: true,
+                            labelString: 'Time'
+                        }
+                    }],
+                    yAxes: [{
+                        display: true,
+                        scaleLabel: {
+                            display: true,
+                            labelString: 'Value'
+                        }
+                    }]
+                }
+            }
+        };
+
+        const config2 = {
+            type: 'bar',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: "Capteur A1_P2",
+                    backgroundColor: [],
+                    borderColor: [],
+                    data: [],
+                    fill: false,
+                    pointBorderColor: [],
+                    pointBackgroundColor: [],
+                }],
+            },
+            options: {
+                responsive: true,
+                title: {
+                    display: true,
+                    text: 'Relevé de pression'
                 },
                 tooltips: {
                     mode: 'index',
@@ -72,8 +130,10 @@
         };
 
         const context = document.getElementById('canvas').getContext('2d');
+        const context2 = document.getElementById('canvas2').getContext('2d');
 
         const lineChart = new Chart(context, config);
+        const lineChart2 = new Chart(context2, config2);
 
         const source = new EventSource("/chart-data");
 
@@ -82,10 +142,53 @@
             if (config.data.labels.length === 20) {
                 config.data.labels.shift();
                 config.data.datasets[0].data.shift();
+                config.data.datasets[0].pointBorderColor.shift();
+                config.data.datasets[0].pointBackgroundColor.shift();
+                config.data.datasets[0].borderColor.shift();
+                config.data.datasets[0].backgroundColor.shift();
             }
-            config.data.labels.push(data.time);
-            config.data.datasets[0].data.push(data.value);
-            lineChart.update();
+            if (config2.data.labels.length === 20) {
+                config2.data.labels.shift();
+                config2.data.datasets[0].data.shift();
+                config2.data.datasets[0].pointBorderColor.shift();
+                config2.data.datasets[0].pointBackgroundColor.shift();
+                config2.data.datasets[0].borderColor.shift();
+                config2.data.datasets[0].backgroundColor.shift();
+            }
+
+            config.data.labels.push(data.A1_P1.time);
+            config2.data.labels.push(data.A1_P2.time);
+            config.data.datasets[0].data.push(data.A1_P1.value);
+            config2.data.datasets[0].data.push(data.A1_P2.value);
+
+            if (data.A1_P1.anomaly === 'false') {
+                config.data.datasets[0].pointBackgroundColor.push('rgb(54, 240, 92)');
+                config.data.datasets[0].pointBorderColor.push('rgb(54, 240, 92)');
+                config.data.datasets[0].backgroundColor.push('rgb(54, 240, 92)');
+                config.data.datasets[0].borderColor.push('rgb(54, 240, 92)');
+            }
+            else if (data.A1_P1.anomaly === 'true') {
+                config.data.datasets[0].pointBackgroundColor.push('rgb(255, 99, 132)');
+                config.data.datasets[0].pointBorderColor.push('rgb(255, 99, 132)');
+                config.data.datasets[0].backgroundColor.push('rgb(255, 99, 132)');
+                config.data.datasets[0].borderColor.push('rgb(255, 99, 132)');
+            }
+
+            if (data.A1_P2.anomaly === 'false') {
+                config2.data.datasets[0].pointBackgroundColor.push('rgb(54, 240, 92)');
+                config2.data.datasets[0].pointBorderColor.push('rgb(54, 240, 92)');
+                config2.data.datasets[0].backgroundColor.push('rgb(54, 240, 92)');
+                config2.data.datasets[0].borderColor.push('rgb(54, 240, 92)');
+            }
+            else if (data.A1_P2.anomaly === 'true') {
+                config2.data.datasets[0].pointBackgroundColor.push('rgb(255, 99, 132)');
+                config2.data.datasets[0].pointBorderColor.push('rgb(255, 99, 132)');
+                config2.data.datasets[0].backgroundColor.push('rgb(255, 99, 132)');
+                config2.data.datasets[0].borderColor.push('rgb(255, 99, 132)');
+            }
+
+                lineChart.update();
+                lineChart2.update();
         }
     });
 </script>

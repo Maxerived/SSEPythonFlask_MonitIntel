@@ -8,7 +8,6 @@ import random
 import secrets
 import sqlite3
 import time
-import webbrowser as wb
 from collections import deque
 from datetime import datetime
 from getdata import *
@@ -334,14 +333,29 @@ def get_data():
 def graph():
     return render_template('graph.html')
 
+
 @app.route('/chart-data')
 def chart_data():
     def generate_random_data():
+        i = 0
         while True:
+            if i > 0:
+                time.sleep((X['A1_P1'][-1] - X['A1_P1'][-2]).seconds)
+            i = 1
             json_data = json.dumps(
-                {'time': X['A1_P1'][0], 'value' : Y['A1_P1'][0]})
+                {'A1_P1' : {
+                    'time': str(X['A1_P1'][-1]),
+                    'value' : Y['A1_P1'][-1],
+                    'anomaly' : Z['A1_P1'][-1]
+                    },
+                'A1_P2' : {
+                    'time': str(X['A1_P2'][-1]),
+                    'value' : Y['A1_P2'][-1],
+                    'anomaly' : Z['A1_P2'][-1]
+                    }
+                }
+            )
             yield f"data:{json_data}\n\n"
-            time.sleep(1)
 
     return Response(generate_random_data(), mimetype='text/event-stream')
 
