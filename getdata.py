@@ -1,4 +1,5 @@
 import asyncio
+import dateutil.parser
 import os
 import sqlite3
 import time
@@ -8,14 +9,14 @@ from datetime import datetime
 
 from pubsub import pub
 
-# Détermine le nombre de valeurs glissantes prises en compte pour le graphe
-quelen = 5
+# Détermine le nombre de valeurs glissantes dans les deques X, Y et Z
+quelen = 2
 
 # Détermine le facteur d'accélération d'envoi des données
 acc_fact = 1
 
 # Détermine le nombre de données envoyées
-nb_data = 20
+nb_data = 100
 
 
 def get_hash_from_db(identifiant):
@@ -180,37 +181,29 @@ def get_seen_devices(username):
     return appareils
 
 
-def listener(topic=None, data=None):
-    date_time = datetime.strftime(
-        datetime.strptime(data.split(",")[0], "%d/%m/%Y %H:%M:%S"), "%Y-%m-%d %H:%M:%S"
-    )
+def listener(topic = None, data = None):
+    date_time = dateutil.parser.parse(data.split(',')[0])
     X[topic].append(date_time)
     value = data.split(",")[1]
     Y[topic].append(value)
-    anomaly = data.split(",")[2]
-    Z[topic].append(anomaly)
-
-
+    anomaly = data.split(',')[2]
+    Z[topic].append(anomaly.lower())
 #    print(topic, X[topic], Y[topic], Z[topic])
 
 
-def send_appdata_after(delay, app, data):
+def send_appdata_after(delay, app, appdata):
     time.sleep(delay)
-    pub.sendMessage(app, topic=app, data=data)
-
+    pub.sendMessage(app, topic = app, data = appdata)
+    
 
 def send_data(data, app, nb_data):
 
     date_time = [None, None]
-    date_time[0] = datetime.strptime(
-        data[app][0][:-1].split(",")[0], "%d/%m/%Y %H:%M:%S"
-    )
+    date_time[0] = dateutil.parser.parse(data[app][0][:-1].split(',')[0])
     send_appdata_after(0, app, data[app][0][:-1])
 
     for i in range(1, nb_data):
-        date_time[1] = datetime.strptime(
-            data[app][i][:-1].split(",")[0], "%d/%m/%Y %H:%M:%S"
-        )
+        date_time[1] = dateutil.parser.parse(data[app][i][:-1].split(',')[0])
         sleep_time = (date_time[1] - date_time[0]).seconds / acc_fact
         date_time[0] = date_time[1]
         send_appdata_after(sleep_time, app, data[app][i][:-1])
@@ -228,9 +221,7 @@ for appareil in appareils:
 for appareil in new_apps:
     if appareil not in appareils:
         for K in [X, Y, Z]:
-            X[appareil] = deque(maxlen=quelen)
-            Y[appareil] = deque(maxlen=quelen)
-            Z[appareil] = deque(maxlen=quelen)
+            K[appareil] = deque(maxlen = quelen)
 appareils = new_apps
 
 
@@ -243,12 +234,8 @@ for appareil in appareils:
         apps.append(appareil)
         with open(filepath, "r") as f:
             data[appareil] = f.readlines()
-        filehead_time = datetime.strptime(
-            data[appareil][1].split(",")[0], "%d/%m/%Y %H:%M:%S"
-        )
-        filetail_time = datetime.strptime(
-            data[appareil][-1].split(",")[0], "%d/%m/%Y %H:%M:%S"
-        )
+        filehead_time = dateutil.parser.parse(data[appareil][1].split(',')[0])
+        filetail_time = dateutil.parser.parse(data[appareil][-1].split(',')[0])
         if filetail_time < filehead_time:
             data[appareil].reverse()
             data[appareil] = data[appareil][:-1][:nb_data]
