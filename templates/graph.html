@@ -8,24 +8,17 @@
 </head>
 <body>
 <div class="container">
+    {% for appareil in appareils %}
     <div class="row">
         <div class="col-12">
             <div class="card">
                 <div class="card-body">
-                    <canvas id="canvas"></canvas>
+                    <canvas id="{{appareil}}"></canvas>
                 </div>
             </div>
         </div>
     </div>
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-body">
-                    <canvas id="canvas2"></canvas>
-                </div>
-            </div>
-        </div>
-    </div>
+    {% endfor %}
 </div>
 <!--suppress JSUnresolvedLibraryURL -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
@@ -35,12 +28,16 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js"></script>
 <script>
     $(document).ready(function () {
-        const config = {
+        const config = {}
+        const context = {}
+        const lineChart = {}
+        {% for appareil in appareils %}
+        config.{{appareil}} = {
             type: 'bar',
             data: {
                 labels: [],
                 datasets: [{
-                    label: "Capteur A1_P1",
+                    label: "Capteur {{appareil}}",
                     backgroundColor: [],
                     borderColor: [],
                     data: [],
@@ -82,113 +79,44 @@
             }
         };
 
-        const config2 = {
-            type: 'bar',
-            data: {
-                labels: [],
-                datasets: [{
-                    label: "Capteur A1_P2",
-                    backgroundColor: [],
-                    borderColor: [],
-                    data: [],
-                    fill: false,
-                    pointBorderColor: [],
-                    pointBackgroundColor: [],
-                }],
-            },
-            options: {
-                responsive: true,
-                title: {
-                    display: true,
-                    text: 'Relevé de pression'
-                },
-                tooltips: {
-                    mode: 'index',
-                    intersect: false,
-                },
-                hover: {
-                    mode: 'nearest',
-                    intersect: true
-                },
-                scales: {
-                    xAxes: [{
-                        display: true,
-                        scaleLabel: {
-                            display: true,
-                            labelString: 'Time'
-                        }
-                    }],
-                    yAxes: [{
-                        display: true,
-                        scaleLabel: {
-                            display: true,
-                            labelString: 'Value'
-                        }
-                    }]
-                }
-            }
-        };
+        context.{{appareil}} = document.getElementById("{{appareil}}").getContext('2d');
 
-        const context = document.getElementById('canvas').getContext('2d');
-        const context2 = document.getElementById('canvas2').getContext('2d');
+        lineChart.{{appareil}} = new Chart(context.{{appareil}}, config.{{appareil}});
 
-        const lineChart = new Chart(context, config);
-        const lineChart2 = new Chart(context2, config2);
+        {% endfor %}
 
         const source = new EventSource("/chart-data");
 
         source.onmessage = function (event) {
             const data = JSON.parse(event.data);
-            if (config.data.labels.length === 20) {
-                config.data.labels.shift();
-                config.data.datasets[0].data.shift();
-                config.data.datasets[0].pointBorderColor.shift();
-                config.data.datasets[0].pointBackgroundColor.shift();
-                config.data.datasets[0].borderColor.shift();
-                config.data.datasets[0].backgroundColor.shift();
-            }
-            if (config2.data.labels.length === 20) {
-                config2.data.labels.shift();
-                config2.data.datasets[0].data.shift();
-                config2.data.datasets[0].pointBorderColor.shift();
-                config2.data.datasets[0].pointBackgroundColor.shift();
-                config2.data.datasets[0].borderColor.shift();
-                config2.data.datasets[0].backgroundColor.shift();
+            {% for appareil in appareils %}
+            if (config.{{appareil}}.data.labels.length === 20) {
+                config.{{appareil}}.data.labels.shift();
+                config.{{appareil}}.data.datasets[0].data.shift();
+                config.{{appareil}}.data.datasets[0].pointBorderColor.shift();
+                config.{{appareil}}.data.datasets[0].pointBackgroundColor.shift();
+                config.{{appareil}}.data.datasets[0].borderColor.shift();
+                config.{{appareil}}.data.datasets[0].backgroundColor.shift();
             }
 
-            config.data.labels.push(data.A1_P1.time);
-            config2.data.labels.push(data.A1_P2.time);
-            config.data.datasets[0].data.push(data.A1_P1.value);
-            config2.data.datasets[0].data.push(data.A1_P2.value);
+            config.{{appareil}}.data.labels.push(data.{{appareil}}.time);
+            config.{{appareil}}.data.datasets[0].data.push(data.{{appareil}}.value);
 
-            if (data.A1_P1.anomaly === 'false') {
-                config.data.datasets[0].pointBackgroundColor.push('rgb(54, 240, 92)');
-                config.data.datasets[0].pointBorderColor.push('rgb(54, 240, 92)');
-                config.data.datasets[0].backgroundColor.push('rgb(54, 240, 92)');
-                config.data.datasets[0].borderColor.push('rgb(54, 240, 92)');
+            if (data.{{appareil}}.anomaly === 'false') {
+                config.{{appareil}}.data.datasets[0].pointBackgroundColor.push('rgb(54, 240, 92)');
+                config.{{appareil}}.data.datasets[0].pointBorderColor.push('rgb(54, 240, 92)');
+                config.{{appareil}}.data.datasets[0].backgroundColor.push('rgb(54, 240, 92)');
+                config.{{appareil}}.data.datasets[0].borderColor.push('rgb(54, 240, 92)');
             }
-            else if (data.A1_P1.anomaly === 'true') {
-                config.data.datasets[0].pointBackgroundColor.push('rgb(255, 99, 132)');
-                config.data.datasets[0].pointBorderColor.push('rgb(255, 99, 132)');
-                config.data.datasets[0].backgroundColor.push('rgb(255, 99, 132)');
-                config.data.datasets[0].borderColor.push('rgb(255, 99, 132)');
+            else if (data.{{appareil}}.anomaly === 'true') {
+                config.{{appareil}}.data.datasets[0].pointBackgroundColor.push('rgb(255, 99, 132)');
+                config.{{appareil}}.data.datasets[0].pointBorderColor.push('rgb(255, 99, 132)');
+                config.{{appareil}}.data.datasets[0].backgroundColor.push('rgb(255, 99, 132)');
+                config.{{appareil}}.data.datasets[0].borderColor.push('rgb(255, 99, 132)');
             }
 
-            if (data.A1_P2.anomaly === 'false') {
-                config2.data.datasets[0].pointBackgroundColor.push('rgb(54, 240, 92)');
-                config2.data.datasets[0].pointBorderColor.push('rgb(54, 240, 92)');
-                config2.data.datasets[0].backgroundColor.push('rgb(54, 240, 92)');
-                config2.data.datasets[0].borderColor.push('rgb(54, 240, 92)');
-            }
-            else if (data.A1_P2.anomaly === 'true') {
-                config2.data.datasets[0].pointBackgroundColor.push('rgb(255, 99, 132)');
-                config2.data.datasets[0].pointBorderColor.push('rgb(255, 99, 132)');
-                config2.data.datasets[0].backgroundColor.push('rgb(255, 99, 132)');
-                config2.data.datasets[0].borderColor.push('rgb(255, 99, 132)');
-            }
-
-                lineChart.update();
-                lineChart2.update();
+            lineChart.{{appareil}}.update();
+            {% endfor %}
         }
     });
 </script>

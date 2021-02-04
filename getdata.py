@@ -1,11 +1,9 @@
-import asyncio
 import dateutil.parser
 import os
 import sqlite3
 import time
 from collections import deque
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime
 
 from pubsub import pub
 
@@ -16,7 +14,7 @@ quelen = 2
 acc_fact = 1
 
 # Détermine le nombre de données envoyées
-nb_data = 100
+nb_data = 1000
 
 
 def get_hash_from_db(identifiant):
@@ -61,11 +59,13 @@ def get_fields_data():
     res = cur.fetchall()
     for poste in res:
         postes.append(poste[0])
+
     sites = []
     cur.execute("SELECT site FROM sites")
     res = cur.fetchall()
     for site in res:
         sites.append(site[0])
+    
     chaines = []
     cur.execute("SELECT chaine,site FROM chaines")
     res = cur.fetchall()
@@ -77,16 +77,19 @@ def get_fields_data():
     res = cur.fetchall()
     for ligne in res:
         lignes.append(ligne[0])
+    
     types = []
     cur.execute("SELECT type_appareil FROM types_appareil")
     res = cur.fetchall()
     for type_appareil in res:
         types.append(type_appareil[0])
+    
     types_descr = []
     cur.execute("SELECT description FROM types_appareil")
     res = cur.fetchall()
     for type_descr in res:
         types_descr.append(type_descr[0])
+    
     nivs_resp = []
     cur.execute("SELECT niv_resp FROM niveau_resp")
     res = cur.fetchall()
@@ -238,8 +241,12 @@ for appareil in appareils:
         filetail_time = dateutil.parser.parse(data[appareil][-1].split(',')[0])
         if filetail_time < filehead_time:
             data[appareil].reverse()
+            if len(data[appareil]) < nb_data:
+                data[appareil] = data[appareil][:-1]
             data[appareil] = data[appareil][:-1][:nb_data]
         elif filetail_time > filehead_time:
+            if len(data[appareil]) < nb_data:
+                data[appareil] = data[appareil][1:]
             data[appareil] = data[appareil][1:][:nb_data]
     if appareil in apps and not os.path.isfile(filepath):
         data.pop(appareil)

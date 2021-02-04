@@ -4,7 +4,6 @@ import hashlib
 import json
 import os
 import queue
-import random
 import secrets
 import sqlite3
 import time
@@ -63,7 +62,7 @@ def admin():
             data = get_fields_data()
             postes = [""] + data[0]
             sites = [""] + data[1]
-            chaines = data[2] #exception! Choix vide fait dans html, pour limiter les choix selon le site choisi.  
+            chaines = data[2] # Exception! Choix vide fait dans html, pour limiter les choix selon le site choisi.  
             lignes = [""] + data[3]
             types = [""] + data[4]
             types_descr = [""] + data[5]
@@ -133,7 +132,8 @@ def login():
             error = "Le mot de passe est incorrect."
             return render_template("login.html", error=error)
 
-        # Si l'identifiant et le mot de passe sont corrects
+        # Si l'identifiant et le mot de passe sont corrects,
+        # instanciation de la session avec l'identifiant
 
         print("Mot de passe correct")
         error = "Vous êtes authentifié."
@@ -343,34 +343,40 @@ def get_data():
 
 @app.route("/graph")
 def graph():
-    return render_template("graph.html")
 
+    session['username'] = "andrea"
+    appareils = get_seen_devices(session['username'])
+
+    # appareils = ['A1_P1', 'A1_P2']
+
+    return render_template("graph.html", appareils=appareils)
 
 
 @app.route('/chart-data')
 def chart_data():
-    def generate_random_data():
+
+    session['username'] = "andrea"
+    appareils = get_seen_devices(session['username'])
+
+    # appareils = ['A1_P1', 'A1_P2']
+
+    def generate_data():
         i = 0
         while True:
             if i > 0:
                 time.sleep((X['A1_P1'][-1] - X['A1_P1'][-2]).seconds)
             i = 1
-            json_data = json.dumps(
-                {'A1_P1' : {
-                    'time': str(X['A1_P1'][-1]),
-                    'value' : Y['A1_P1'][-1],
-                    'anomaly' : Z['A1_P1'][-1]
-                    },
-                'A1_P2' : {
-                    'time': str(X['A1_P2'][-1]),
-                    'value' : Y['A1_P2'][-1],
-                    'anomaly' : Z['A1_P2'][-1]
+            data = {}
+            for appareil in appareils:
+                data[appareil] = {
+                    'time': str(X[appareil][-1]),
+                    'value' : Y[appareil][-1],
+                    'anomaly' : Z[appareil][-1]
                     }
-                }
-            )
+            json_data = json.dumps(data)
             yield f"data:{json_data}\n\n"
 
-    return Response(generate_random_data(), mimetype="text/event-stream")
+    return Response(generate_data(), mimetype="text/event-stream")
 
 
 #############################################################################################@
