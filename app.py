@@ -183,7 +183,7 @@ def add_user():
 
     conn = sqlite3.connect("profils_utilisateurs.db")
     cur = conn.cursor()
-    print("Connexion réussie à SQLite")
+    print("[INFO] Connexion réussie à SQLite")
 
     # Insertion d'un nouvel utilisateur dans la base de données
 
@@ -199,12 +199,12 @@ def add_user():
             (identifiant, hash_mdp, site, chaine, ligne, poste),
         )
         error = "Nouvel utilisateur intégré dans la base de données"
-        print("Utilisateur intégré dans la base de données avec succès")
+        print("[INFO] Utilisateur intégré dans la base de données avec succès")
 
     except sqlite3.IntegrityError:
         error = "Cet identifiant existe déjà dans la base de données !!!"
         print(
-            "Échec lors de l'insertion d'un nouvel utilisateur : identifiant déjà existant"
+            "[ERROR] Échec lors de l'insertion d'un nouvel utilisateur : identifiant déjà existant"
         )
 
     # Fermeture de la base de données
@@ -212,7 +212,7 @@ def add_user():
         cur.close()
         conn.commit()
         conn.close()
-        print("Connexion SQlite fermée")
+        print("[INFO] Connexion SQlite fermée")
 
     session["error"] = error
 
@@ -236,7 +236,7 @@ def add_device():
 
     conn = sqlite3.connect("profils_utilisateurs.db")
     cur = conn.cursor()
-    print("Connexion réussie à SQLite")
+    print("[INFO] Connexion réussie à SQLite")
 
     # Insertion d'un nouvel appareil dans la base de données
 
@@ -251,12 +251,12 @@ def add_device():
             (appareil, type_app, site, chaine, ligne),
         )
         error = "Nouvel appareil intégré dans la base de données"
-        print("Appareil intégré dans la base de données avec succès")
+        print("[INFO] Appareil intégré dans la base de données avec succès")
 
     except sqlite3.IntegrityError:
         error = "Cet appareil existe déjà dans la base de données !!!"
         print(
-            "Échec lors de l'insertion d'un nouvel appareil : identifiant déjà existant"
+            "[ERROR] Échec lors de l'insertion d'un nouvel appareil : identifiant déjà existant"
         )
 
     # Fermeture de la base de données
@@ -264,7 +264,7 @@ def add_device():
         cur.close()
         conn.commit()
         conn.close()
-        print("Connexion SQlite fermée")
+        print("[INFO] Connexion SQlite fermée")
 
     session["error"] = error
 
@@ -286,7 +286,7 @@ def add_post_type():
 
     conn = sqlite3.connect("profils_utilisateurs.db")
     cur = conn.cursor()
-    print("Connexion réussie à SQLite")
+    print("[INFO] Connexion réussie à SQLite")
 
     # Insertion d'un nouvel appareil dans la base de données
 
@@ -299,12 +299,12 @@ def add_post_type():
             (poste, niv_resp, type_for_poste),
         )
         error = "Nouveau type de poste intégré dans la base de données"
-        print("Type de poste intégré dans la base de données avec succès")
+        print("[INFO] Type de poste intégré dans la base de données avec succès")
 
     except sqlite3.IntegrityError:
         error = "Ce type de poste existe déjà dans la base de données !!!"
         print(
-            "Échec lors de l'insertion d'un nouveau type de poste : identifiant déjà existant"
+            "[ERROR] Échec lors de l'insertion d'un nouveau type de poste : identifiant déjà existant"
         )
 
     # Fermeture de la base de données
@@ -344,10 +344,8 @@ def get_data():
 @app.route("/graph")
 def graph():
 
-    session['username'] = "andrea"
+    session['username'] = "sacha"
     appareils = get_seen_devices(session['username'])
-
-    # appareils = ['A1_P1', 'A1_P2']
 
     return render_template("graph.html", appareils=appareils)
 
@@ -355,10 +353,8 @@ def graph():
 @app.route('/chart-data')
 def chart_data():
 
-    session['username'] = "andrea"
+    session['username'] = "sacha"
     appareils = get_seen_devices(session['username'])
-
-    # appareils = ['A1_P1', 'A1_P2']
 
     def generate_data():
         i = 0
@@ -374,6 +370,8 @@ def chart_data():
                     'anomaly' : Z[appareil][-1]
                     }
             json_data = json.dumps(data)
+            # list1 = [X[app] for app in appareils]
+            # print(list1)
             yield f"data:{json_data}\n\n"
 
     return Response(generate_data(), mimetype="text/event-stream")
@@ -460,12 +458,8 @@ def listen():
     return Response(stream(), mimetype="text/event-stream")
 
 
-#############################################################################################@
-#############################################################################################@
-
-
-# dates = matplotlib.dates.date2num(list_of_datetimes)
-# matplotlib.pyplot.plot_date(dates, values)
+#############################################################################################
+#############################################################################################
 
 
 if __name__ == "__main__":
