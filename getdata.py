@@ -194,22 +194,25 @@ def listener(topic = None, data = None):
 #    print(topic, X[topic], Y[topic], Z[topic])
 
 
-def send_appdata_after(delay, app, appdata):
+def send_appdata_after(delay, app, app_data):
     time.sleep(delay)
-    pub.sendMessage(app, topic = app, data = appdata)
+    pub.sendMessage(app, topic = app, data = app_data)
     
 
-def send_data(data, app, nb_data):
+def send_data(app_data, app, nb_data, time_before_sending):
+
+    time.sleep(time_before_sending)
 
     date_time = [None, None]
-    date_time[0] = dateutil.parser.parse(data[app][0][:-1].split(',')[0])
-    send_appdata_after(0, app, data[app][0][:-1])
+    date_time[0] = dateutil.parser.parse(app_data[0][:-1].split(',')[0])
+    send_appdata_after(0, app, app_data[0][:-1])
 
     for i in range(1, nb_data):
-        date_time[1] = dateutil.parser.parse(data[app][i][:-1].split(',')[0])
+        date_time[1] = dateutil.parser.parse(app_data[i][:-1].split(',')[0])
         sleep_time = (date_time[1] - date_time[0]).seconds / acc_fact
         date_time[0] = date_time[1]
-        send_appdata_after(sleep_time, app, data[app][i][:-1])
+        send_appdata_after(sleep_time, app, app_data[i][:-1])
+
 
 
 X = {}
@@ -255,27 +258,28 @@ for appareil in appareils:
 
 # Récupération des horaires de la première donnée de chaque capteur
 # et tri des appareils dans l'ordre chronologique
-start_times = {}
+sending_times = {}
 for app in apps:
-    start_times[app] = dateutil.parser.parse(data[app][0].split(',')[0])
-time_sorted_tuples = sorted(start_times.items(), key=lambda t:t[1])
+    sending_times[app] = dateutil.parser.parse(data[app][0].split(',')[0])
+time_sorted_tuples = sorted(sending_times.items(), key=lambda t:t[1])
 time_sorted_list = [time_sorted_tuples[i][0] for i in range(len(time_sorted_tuples))]
 
 # Simulation d'envoi des données depuis les capteurs
 # de manière simultanée et coordonnée en fonction de
 # l'horaire de la première donnée du capteur
-start_time = min([time_sorted_tuples[i][1] for i in range(len(time_sorted_tuples))])
+sending_time = min([time_sorted_tuples[i][1] for i in range(len(time_sorted_tuples))])
 executor = ThreadPoolExecutor(len(apps))
-executor.submit(send_data, data, time_sorted_list[0], nb_data)
+executor.submit(send_data, data[time_sorted_list[0]], time_sorted_list[0], nb_data, 0)
 print("[INFO] Connexion au capteur", time_sorted_list[0])
 for app in time_sorted_list[1:]:
-    time.sleep((start_times[app] - start_time).seconds)
-    start_time = start_times[app]
+    sleep_time = (sending_times[app] - sending_time).seconds
+    executor.submit(send_data, data[app], app, nb_data, sleep_time)
     print("[INFO] Connexion au capteur", app)
-    executor.submit(send_data, data, app, nb_data)
+    sending_time = sending_times[app]
 
 
-##########################################################################################
+###############################################################################
+###############################################################################
 """
 async def send_appdata_after(delay, app, data):
     await asyncio.sleep(delay)
