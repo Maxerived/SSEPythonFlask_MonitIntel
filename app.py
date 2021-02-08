@@ -366,26 +366,48 @@ def chart_data():
         app_times = {}
         for app in appareils:
             app_times[app] = 0
+        iter = 0
+        nb_values = max([len(X[appareil]) for appareil in appareils])
         while True:
-            time.sleep(1)
-            data = {}
-            for appareil in appareils:
-                if len(X[appareil]) > 1 and X[appareil][-1] != app_times[appareil]:
-                    data[appareil] = {
-                        'time': str(X[appareil][-1]),
-                        'value' : Y[appareil][-1],
-                        'anomaly' : Z[appareil][-1]
+            if iter < nb_values:
+                data = {}
+                for appareil in appareils:
+                    i = nb_values - len(X[appareil]) - iter + 1
+                    if i > 0:
+                        data[appareil] = {
+                            'time': "",
+                            'value' : "",
+                            'anomaly' : 'null'
                         }
-                    app_times[appareil] = X[appareil][-1]
-                else:
-                    data[appareil] = {
-                        'time': "",
-                        'value' : "",
-                        'anomaly' : 'null'
+                    else:
+                        data[appareil] = {
+                            'time': str(X[appareil][-i]),
+                            'value' : Y[appareil][-i],
+                            'anomaly' : Z[appareil][-i]
                         }
-            json_data = json.dumps(data)
-            # print(data)
-            yield f"data:{json_data}\n\n"
+                iter += 1
+                json_data = json.dumps(data)
+                yield f"data:{json_data}\n\n"
+
+            else:
+                data = {}
+                for appareil in appareils:
+                    if len(X[appareil]) > 1 and X[appareil][-1] != app_times[appareil]:
+                        data[appareil] = {
+                            'time': str(X[appareil][-1]),
+                            'value' : Y[appareil][-1],
+                            'anomaly' : Z[appareil][-1]
+                            }
+                        app_times[appareil] = X[appareil][-1]
+                    else:
+                        data[appareil] = {
+                            'time': "",
+                            'value' : "",
+                            'anomaly' : 'null'
+                            }
+                json_data = json.dumps(data)
+                yield f"data:{json_data}\n\n"
+                time.sleep(1/acc_fact)
 
     return Response(generate_data(), mimetype="text/event-stream")
 

@@ -8,13 +8,13 @@ from concurrent.futures import ThreadPoolExecutor
 from pubsub import pub
 
 # Détermine le nombre de valeurs glissantes dans les deques X, Y et Z
-quelen = 2
+quelen = 100
 
 # Détermine le facteur d'accélération d'envoi des données
 acc_fact = 1
 
 # Détermine le nombre de données envoyées
-nb_data = 1000
+nb_data = 2000
 
 
 def get_hash_from_db(identifiant):
