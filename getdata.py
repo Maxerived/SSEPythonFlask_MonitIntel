@@ -276,35 +276,4 @@ for app in time_sorted_list[1:]:
     sending_time = sending_times[app]
 
 
-###############################################################################
-###############################################################################
-"""
-async def send_appdata_after(delay, app, data):
-    await asyncio.sleep(delay)
-    pub.sendMessage(app, topic = app, data = data)
-    
 
-async def send_data(data, apps, nb_data):
-
-    date_time = {}
-    sleep_time = {}
-    tasks = {}
-    for app in apps:
-        date_time[app] = [None, None]
-        date_time[app][0] = datetime.strptime(data[app][0][:-2].split(',')[0], "%d/%m/%Y %H:%M:%S")
-        sleep_time[app] = [0]
-        tasks[app] = [asyncio.create_task(send_appdata_after(sleep_time[app][0], app, data[app][0][:-2]))]
-        for i in range(1, nb_data):
-            date_time[app][1] = datetime.strptime(data[app][i][:-2].split(',')[0], "%d/%m/%Y %H:%M:%S")
-            sleep_time[app].append((date_time[app][1] - date_time[app][0]).seconds / acc_fact)
-#            date_time[app][0] = date_time[app][1]
-            tasks[app].append(asyncio.create_task(
-                send_appdata_after(sleep_time[app][i], app, data[app][i][:-2]))
-            )
-
-    for i in range(nb_data):
-        for app in apps:
-            await tasks[app][i]
-
-asyncio.run(send_data(data, apps, nb_data))
-"""
