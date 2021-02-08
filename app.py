@@ -41,6 +41,7 @@ def index():
     if session.get("username") is not None:
         return """
             <link rel="icon" type="image/png" href="/static/img/favicon.ico"/>
+            <button onclick="window.location.href='/graph';">Dashboard</button>
             <button onclick="window.location.href='/logout';">Logout</button>
             <p>Logged in as %s<p>
         """ % escape(
@@ -110,12 +111,12 @@ def login():
         # Récupération du hash_mdp dans la base de données à partir de l'identifiant
 
         hash_mdp = get_hash_from_db(identifiant)
-        print("Hash récupéré")
+        print("[INFO] Hash récupéré")
 
         # Si l'identifiant n'est pas dans la base de données
 
         if hash_mdp == None:
-            error = "Cet identifiant n'existe pas dans la base de données."
+            error = "[ERROR] Cet identifiant n'existe pas dans la base de données."
             return render_template("login.html", error=error)
 
         # Récupération du salt et calcul du hash avec le salt et le mdp entré apr l'utilisateur
@@ -128,14 +129,14 @@ def login():
         # Si le mot de passe est incorrect
 
         if hash_mdp[32:] != key:
-            print("Mot de passe incorrect")
+            print("[ERROR] Mot de passe incorrect")
             error = "Le mot de passe est incorrect."
             return render_template("login.html", error=error)
 
         # Si l'identifiant et le mot de passe sont corrects,
         # instanciation de la session avec l'identifiant
 
-        print("Mot de passe correct")
+        print("[INFO] Mot de passe correct")
         error = "Vous êtes authentifié."
         session["username"] = identifiant
 
@@ -154,6 +155,7 @@ def login():
 @app.route("/logout")
 def logout():
     session.pop("username", None)
+    session.pop("appareils", None)
     session.pop("error", None)
     return redirect(url_for("login"))
 
@@ -344,122 +346,49 @@ def get_data():
 @app.route("/graph")
 def graph():
 
-    session['username'] = "sacha"
-    appareils = get_seen_devices(session['username'])
+    if session.get("username") is None:
+        return redirect(url_for("login"))
 
-    return render_template("graph.html", appareils=appareils)
+    if session.get("username") == "admin":
+        return redirect(url_for("admin"))
+    
+    session["appareils"] = get_seen_devices(session["username"])
+    
+    return render_template("graph.html", appareils=session["appareils"])
 
 
 @app.route('/chart-data')
 def chart_data():
 
-    session['username'] = "sacha"
-    appareils = get_seen_devices(session['username'])
-
+    appareils = session["appareils"]
+    
     def generate_data():
-        i = 0
+        app_times = {}
+        for app in appareils:
+            app_times[app] = 0
         while True:
-            if i > 0:
-                time.sleep((X['A1_P1'][-1] - X['A1_P1'][-2]).seconds)
-            i = 1
+            time.sleep(1)
             data = {}
             for appareil in appareils:
-                data[appareil] = {
-                    'time': str(X[appareil][-1]),
-                    'value' : Y[appareil][-1],
-                    'anomaly' : Z[appareil][-1]
-                    }
+                if len(X[appareil]) > 1 and X[appareil][-1] != app_times[appareil]:
+                    data[appareil] = {
+                        'time': str(X[appareil][-1]),
+                        'value' : Y[appareil][-1],
+                        'anomaly' : Z[appareil][-1]
+                        }
+                    app_times[appareil] = X[appareil][-1]
+                else:
+                    data[appareil] = {
+                        'time': "",
+                        'value' : "",
+                        'anomaly' : 'null'
+                        }
             json_data = json.dumps(data)
-            # list1 = [X[app] for app in appareils]
-            # print(list1)
+            # print(data)
             yield f"data:{json_data}\n\n"
 
     return Response(generate_data(), mimetype="text/event-stream")
 
-
-#############################################################################################@
-#############################################################################################@
-
-
-class MessageAnnouncer:
-    def __init__(self):
-        self.listeners = []
-
-    def listen(self):
-        q = queue.Queue(maxsize=5)
-        self.listeners.append(q)
-        return q
-
-    def announce(self, msg):
-        for i in reversed(range(len(self.listeners))):
-            try:
-                self.listeners[i].put_nowait(msg)
-            except queue.Full:
-                del self.listeners[i]
-
-
-announcer = MessageAnnouncer()
-
-# event: Jackson 5\\ndata: {"abc": 123}\\n\\n
-
-
-def format_sse(data: str, event=None) -> str:
-    msg = f"data: {data}\n\n"
-    if event is not None:
-        msg = f"event: {event}\n{msg}"
-    return msg
-
-
-@app.route("/input_data/<input_data>", methods=["GET"])
-def get_values(input_data):
-    input_data = str(input_data)
-    input_var_elem = input_data.rsplit(".", 1)
-    #    var = input_var_elem[0]
-    if len(input_var_elem) > 1:
-        extension = input_data.rsplit(".", 1)[1].lower()
-        if extension not in {"csv", "tsv"}:
-            return {"La ressource n'est pas au bon format"}, 200
-        filename = input_data
-        with open(filename, "r") as file:
-            lines = file.readlines()
-            if len(lines) <= 2:
-                data = lines[1].split()[2]
-            header = lines[0]
-            #            mesured_var = header.split()[1]
-            #             			print(mesured_var)
-            filehead_time = datetime.strptime(
-                " ".join(lines[1].split()[:2]), "%d/%m/%Y %H:%M:%S"
-            )
-            filetail_time = datetime.strptime(
-                " ".join(lines[-1].split()[:2]), "%d/%m/%Y %H:%M:%S"
-            )
-            if filetail_time < filehead_time:
-                data = lines[-1].split()[2]
-                lines = lines[:-1]
-            elif filetail_time > filehead_time:
-                data = lines[1].split()[2]
-                lines = [header] + lines[2:]
-        file = open(filename, "w")
-        file.write("".join(lines)[:-1])
-        file.close()
-        msg = format_sse(data=data)
-        announcer.announce(msg=msg)
-    return jsonify({"Status": "On progress..."}), 200
-
-
-@app.route("/listen", methods=["GET"])
-def listen():
-    def stream():
-        messages = announcer.listen()  # returns a queue.Queue
-        while True:
-            msg = messages.get()  # blocks until a new message arrives
-            yield msg
-
-    return Response(stream(), mimetype="text/event-stream")
-
-
-#############################################################################################
-#############################################################################################
 
 
 if __name__ == "__main__":
