@@ -35,3 +35,21 @@ function changeChaine(idTab) {
     //change the selected option to the first empty one
     selectChaine.options[0].selected = 'selected'
 }
+
+function changeSite(element, idTab) {
+    var niveau = element.options[element.selectedIndex].attributes.name.value;
+    var selectSite = document.getElementById(idTab + "-site");
+    var dirGenerale = "direction générale";
+    if (niveau == dirGenerale) {
+        for (i = 0; i < selectSite.options.length; i++) {
+            selectSite.options[i].style.display = "none";
+        }
+        document.getElementsByName(idTab + dirGenerale).forEach(element => element.style.display = "block");
+    } else {
+        for (i = 0; i < selectSite.options.length; i++) {
+            selectSite.options[i].style.display = "block";
+        }
+        document.getElementsByName(idTab + dirGenerale).forEach(element => element.style.display = "none");
+    }
+    selectSite.options[0].selected = 'selected'
+}
