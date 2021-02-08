@@ -55,10 +55,8 @@ def get_fields_data():
     # Récupération des données
 
     postes = []
-    cur.execute("SELECT poste FROM postes")
-    res = cur.fetchall()
-    for poste in res:
-        postes.append(poste[0])
+    cur.execute("SELECT poste,niveau_de_responsabilite FROM postes")
+    postes = cur.fetchall()
 
     sites = []
     cur.execute("SELECT site FROM sites")

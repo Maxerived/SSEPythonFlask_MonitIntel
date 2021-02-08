@@ -54,9 +54,9 @@
 
                     <label for="poste"><b>Poste tenu</b></label>
                     <br>
-                    <select class="form-control" name="poste">
+                    <select class="form-control" name="poste" id="adduser-poste" onchange="changeSite(this,'adduser')">
                         {% for poste in postes %}
-                        <option value="{{poste}}">{{poste}}</option>
+                        <option value="{{poste[0]}}" name="{{poste[1]}}">{{poste[0]}}</option>
                         {% endfor %}
                     </select>
                     <br>
@@ -65,8 +65,9 @@
                     <label for="site"><b>Site</b></label>
                     <br>
                     <select class="form-control" name="site" id="adduser-site" onchange="changeChaine('adduser')">
+                        <option value=""></option>
                         {% for site in sites %}
-                        <option value="{{site}}">{{site}}</option>
+                        <option value="{{site}}" name="adduser{{site}}" style="display: none;">{{site}}</option>
                         {% endfor %}
                     </select>
                     <br>
