@@ -1,11 +1,9 @@
-import asyncio
 import dateutil.parser
 import os
 import sqlite3
 import time
 from collections import deque
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime
 
 from pubsub import pub
 
@@ -16,7 +14,7 @@ quelen = 2
 acc_fact = 1
 
 # Détermine le nombre de données envoyées
-nb_data = 100
+nb_data = 1000
 
 
 def get_hash_from_db(identifiant):
@@ -25,7 +23,7 @@ def get_hash_from_db(identifiant):
 
     conn = sqlite3.connect("profils_utilisateurs.db")
     cur = conn.cursor()
-    print("Connexion réussie à SQLite")
+    print("[INFO] Connexion réussie à SQLite")
 
     # Récupération du hash_mdp à partir de l'identifiant
 
@@ -38,7 +36,7 @@ def get_hash_from_db(identifiant):
 
     cur.close()
     conn.close()
-    print("Connexion SQlite fermée")
+    print("[INFO] Connexion SQlite fermée")
 
     if len(res) == 0:
         return None
@@ -52,7 +50,7 @@ def get_fields_data():
 
     conn = sqlite3.connect("profils_utilisateurs.db")
     cur = conn.cursor()
-    print("Connexion réussie à SQLite")
+    print("[INFO] Connexion réussie à SQLite")
 
     # Récupération des données
 
@@ -61,11 +59,13 @@ def get_fields_data():
     res = cur.fetchall()
     for poste in res:
         postes.append(poste[0])
+
     sites = []
     cur.execute("SELECT site FROM sites")
     res = cur.fetchall()
     for site in res:
         sites.append(site[0])
+    
     chaines = []
     cur.execute("SELECT chaine,site FROM chaines")
     res = cur.fetchall()
@@ -77,16 +77,19 @@ def get_fields_data():
     res = cur.fetchall()
     for ligne in res:
         lignes.append(ligne[0])
+    
     types = []
     cur.execute("SELECT type_appareil FROM types_appareil")
     res = cur.fetchall()
     for type_appareil in res:
         types.append(type_appareil[0])
+    
     types_descr = []
     cur.execute("SELECT description FROM types_appareil")
     res = cur.fetchall()
     for type_descr in res:
         types_descr.append(type_descr[0])
+    
     nivs_resp = []
     cur.execute("SELECT niv_resp FROM niveau_resp")
     res = cur.fetchall()
@@ -97,7 +100,7 @@ def get_fields_data():
 
     cur.close()
     conn.close()
-    print("Connexion SQlite fermée")
+    print("[INFO] Connexion SQlite fermée")
 
     return [postes, sites, chaines, lignes, types, types_descr, nivs_resp]
 
@@ -106,7 +109,7 @@ def get_seen_devices(username):
 
     conn = sqlite3.connect("profils_utilisateurs.db")
     cur = conn.cursor()
-    print("Connexion réussie à SQLite")
+    print("[INFO] Connexion réussie à SQLite")
 
     # Récupération du poste tenu par l'utilisateur
 
@@ -169,9 +172,9 @@ def get_seen_devices(username):
         res.append(cur.fetchall())
 
     cur.close()
-    print("Appareils de l'utilisateur {} récupérés".format(username))
+    print("[INFO] Appareils de l'utilisateur {} récupérés".format(username))
     conn.close()
-    print("Connexion SQlite fermée")
+    print("[INFO] Connexion SQlite fermée")
 
     appareils = []
     for i in range(len(res)):
@@ -238,18 +241,37 @@ for appareil in appareils:
         filetail_time = dateutil.parser.parse(data[appareil][-1].split(',')[0])
         if filetail_time < filehead_time:
             data[appareil].reverse()
+            if len(data[appareil]) < nb_data:
+                data[appareil] = data[appareil][:-1]
             data[appareil] = data[appareil][:-1][:nb_data]
         elif filetail_time > filehead_time:
+            if len(data[appareil]) < nb_data:
+                data[appareil] = data[appareil][1:]
             data[appareil] = data[appareil][1:][:nb_data]
     if appareil in apps and not os.path.isfile(filepath):
         data.pop(appareil)
         apps.remove(appareil)
 
 
-nb_sendjobs = len(apps) * nb_data
-executor = ThreadPoolExecutor(nb_sendjobs)
-
+# Récupération des horaires de la première donnée de chaque capteur
+# et tri des appareils dans l'ordre chronologique
+start_times = {}
 for app in apps:
+    start_times[app] = dateutil.parser.parse(data[app][0].split(',')[0])
+time_sorted_tuples = sorted(start_times.items(), key=lambda t:t[1])
+time_sorted_list = [time_sorted_tuples[i][0] for i in range(len(time_sorted_tuples))]
+
+# Simulation d'envoi des données depuis les capteurs
+# de manière simultanée et coordonnée en fonction de
+# l'horaire de la première donnée du capteur
+start_time = min([time_sorted_tuples[i][1] for i in range(len(time_sorted_tuples))])
+executor = ThreadPoolExecutor(len(apps))
+executor.submit(send_data, data, time_sorted_list[0], nb_data)
+print("[INFO] Connexion au capteur", time_sorted_list[0])
+for app in time_sorted_list[1:]:
+    time.sleep((start_times[app] - start_time).seconds)
+    start_time = start_times[app]
+    print("[INFO] Connexion au capteur", app)
     executor.submit(send_data, data, app, nb_data)
 
 

@@ -4,7 +4,6 @@ import hashlib
 import json
 import os
 import queue
-import random
 import secrets
 import sqlite3
 import time
@@ -63,7 +62,7 @@ def admin():
             data = get_fields_data()
             postes = [""] + data[0]
             sites = [""] + data[1]
-            chaines = data[2] #exception! Choix vide fait dans html, pour limiter les choix selon le site choisi.  
+            chaines = data[2] # Exception! Choix vide fait dans html, pour limiter les choix selon le site choisi.  
             lignes = [""] + data[3]
             types = [""] + data[4]
             types_descr = [""] + data[5]
@@ -133,7 +132,8 @@ def login():
             error = "Le mot de passe est incorrect."
             return render_template("login.html", error=error)
 
-        # Si l'identifiant et le mot de passe sont corrects
+        # Si l'identifiant et le mot de passe sont corrects,
+        # instanciation de la session avec l'identifiant
 
         print("Mot de passe correct")
         error = "Vous êtes authentifié."
@@ -183,7 +183,7 @@ def add_user():
 
     conn = sqlite3.connect("profils_utilisateurs.db")
     cur = conn.cursor()
-    print("Connexion réussie à SQLite")
+    print("[INFO] Connexion réussie à SQLite")
 
     # Insertion d'un nouvel utilisateur dans la base de données
 
@@ -199,12 +199,12 @@ def add_user():
             (identifiant, hash_mdp, site, chaine, ligne, poste),
         )
         error = "Nouvel utilisateur intégré dans la base de données"
-        print("Utilisateur intégré dans la base de données avec succès")
+        print("[INFO] Utilisateur intégré dans la base de données avec succès")
 
     except sqlite3.IntegrityError:
         error = "Cet identifiant existe déjà dans la base de données !!!"
         print(
-            "Échec lors de l'insertion d'un nouvel utilisateur : identifiant déjà existant"
+            "[ERROR] Échec lors de l'insertion d'un nouvel utilisateur : identifiant déjà existant"
         )
 
     # Fermeture de la base de données
@@ -212,7 +212,7 @@ def add_user():
         cur.close()
         conn.commit()
         conn.close()
-        print("Connexion SQlite fermée")
+        print("[INFO] Connexion SQlite fermée")
 
     session["error"] = error
 
@@ -236,7 +236,7 @@ def add_device():
 
     conn = sqlite3.connect("profils_utilisateurs.db")
     cur = conn.cursor()
-    print("Connexion réussie à SQLite")
+    print("[INFO] Connexion réussie à SQLite")
 
     # Insertion d'un nouvel appareil dans la base de données
 
@@ -251,12 +251,12 @@ def add_device():
             (appareil, type_app, site, chaine, ligne),
         )
         error = "Nouvel appareil intégré dans la base de données"
-        print("Appareil intégré dans la base de données avec succès")
+        print("[INFO] Appareil intégré dans la base de données avec succès")
 
     except sqlite3.IntegrityError:
         error = "Cet appareil existe déjà dans la base de données !!!"
         print(
-            "Échec lors de l'insertion d'un nouvel appareil : identifiant déjà existant"
+            "[ERROR] Échec lors de l'insertion d'un nouvel appareil : identifiant déjà existant"
         )
 
     # Fermeture de la base de données
@@ -264,7 +264,7 @@ def add_device():
         cur.close()
         conn.commit()
         conn.close()
-        print("Connexion SQlite fermée")
+        print("[INFO] Connexion SQlite fermée")
 
     session["error"] = error
 
@@ -286,7 +286,7 @@ def add_post_type():
 
     conn = sqlite3.connect("profils_utilisateurs.db")
     cur = conn.cursor()
-    print("Connexion réussie à SQLite")
+    print("[INFO] Connexion réussie à SQLite")
 
     # Insertion d'un nouvel appareil dans la base de données
 
@@ -299,12 +299,12 @@ def add_post_type():
             (poste, niv_resp, type_for_poste),
         )
         error = "Nouveau type de poste intégré dans la base de données"
-        print("Type de poste intégré dans la base de données avec succès")
+        print("[INFO] Type de poste intégré dans la base de données avec succès")
 
     except sqlite3.IntegrityError:
         error = "Ce type de poste existe déjà dans la base de données !!!"
         print(
-            "Échec lors de l'insertion d'un nouveau type de poste : identifiant déjà existant"
+            "[ERROR] Échec lors de l'insertion d'un nouveau type de poste : identifiant déjà existant"
         )
 
     # Fermeture de la base de données
@@ -343,34 +343,38 @@ def get_data():
 
 @app.route("/graph")
 def graph():
-    return render_template("graph.html")
 
+    session['username'] = "sacha"
+    appareils = get_seen_devices(session['username'])
+
+    return render_template("graph.html", appareils=appareils)
 
 
 @app.route('/chart-data')
 def chart_data():
-    def generate_random_data():
+
+    session['username'] = "sacha"
+    appareils = get_seen_devices(session['username'])
+
+    def generate_data():
         i = 0
         while True:
             if i > 0:
                 time.sleep((X['A1_P1'][-1] - X['A1_P1'][-2]).seconds)
             i = 1
-            json_data = json.dumps(
-                {'A1_P1' : {
-                    'time': str(X['A1_P1'][-1]),
-                    'value' : Y['A1_P1'][-1],
-                    'anomaly' : Z['A1_P1'][-1]
-                    },
-                'A1_P2' : {
-                    'time': str(X['A1_P2'][-1]),
-                    'value' : Y['A1_P2'][-1],
-                    'anomaly' : Z['A1_P2'][-1]
+            data = {}
+            for appareil in appareils:
+                data[appareil] = {
+                    'time': str(X[appareil][-1]),
+                    'value' : Y[appareil][-1],
+                    'anomaly' : Z[appareil][-1]
                     }
-                }
-            )
+            json_data = json.dumps(data)
+            # list1 = [X[app] for app in appareils]
+            # print(list1)
             yield f"data:{json_data}\n\n"
 
-    return Response(generate_random_data(), mimetype="text/event-stream")
+    return Response(generate_data(), mimetype="text/event-stream")
 
 
 #############################################################################################@
@@ -454,12 +458,8 @@ def listen():
     return Response(stream(), mimetype="text/event-stream")
 
 
-#############################################################################################@
-#############################################################################################@
-
-
-# dates = matplotlib.dates.date2num(list_of_datetimes)
-# matplotlib.pyplot.plot_date(dates, values)
+#############################################################################################
+#############################################################################################
 
 
 if __name__ == "__main__":
