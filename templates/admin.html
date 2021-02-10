@@ -27,6 +27,9 @@
                 <li class="nav-item" onclick="openForm(event, 'adduser')">
                     <a class="nav-link tablinks" href="#">Ajouter un utilisateur</a>
                 </li>
+                <li class="nav-item" onclick="openForm(event, 'deluser')">
+                    <a class="nav-link tablinks" href="#deluser">Supprimer un utilisateur</a>
+                </li>
                 <li class="nav-item" onclick="openForm(event, 'adddevice')">
                     <a class="nav-link tablinks" href="#adddevice">Ajouter un appareil</a>
                 </li>
@@ -51,7 +54,6 @@
                     <br>
                     <input class="form-control" type="password" name="psw" required>
                     <br>
-
                     <label for="poste"><b>Poste tenu</b></label>
                     <br>
                     <select class="form-control" name="poste" id="adduser-poste" onchange="changeSite(this,'adduser')">
@@ -99,6 +101,31 @@
                 </div>
                 <div class="col-2">
                     <button class="btn btn-success" type="submit">Ajouter</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div id="deluser" class="tabcontent">
+        <form action="/admin/delete_user" method="post">
+            <div class="row">
+                <div class="col-6">
+                    <label for="uname"><b>Identifiant utilisateur</b></label>
+                    <br>
+                    <select class="form-control" name="uname" id="deluser-user">
+                        {% for utilisateur in utilisateurs %}
+                        <option value="{{utilisateur}}">{{utilisateur}}</option>
+                        {% endfor %}
+                    </select>
+                    <br>
+                </div>
+                <div class="col-10 error">
+                    {% if error %}
+                    <strong>Info :</strong> {{ error }}
+                    {% endif %}
+                </div>
+                <div class="col-4">
+                    <button class="btn btn-success" type="submit">Supprimer</button>
                 </div>
             </div>
         </form>

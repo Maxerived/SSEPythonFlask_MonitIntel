@@ -236,3 +236,5 @@ for niv_resp in ["direction générale", "site", "chaine", "ligne"]:
 cur.close()
 conn.commit()
 conn.close()
+
+print("[INFO] Base de données créée avec succès !")

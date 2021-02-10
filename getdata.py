@@ -94,13 +94,19 @@ def get_fields_data():
     for niv_resp in res:
         nivs_resp.append(niv_resp[0])
 
+    utilisateurs = []
+    cur.execute("""SELECT identifiant FROM utilisateurs""")
+    res = cur.fetchall()
+    for utilisateur in res:
+        utilisateurs.append(utilisateur[0])
+
     # Fermeture de la base de données
 
     cur.close()
     conn.close()
     print("[INFO] Connexion SQlite fermée")
 
-    return [postes, sites, chaines, lignes, types, types_descr, nivs_resp]
+    return [postes, sites, chaines, lignes, types, types_descr, nivs_resp, utilisateurs]
 
 
 def get_seen_devices(username):
@@ -199,7 +205,7 @@ def send_appdata_after(delay, app, app_data):
 
 def send_data(app_data, app, nb_data, time_before_sending):
 
-    time.sleep(time_before_sending)
+    time.sleep(time_before_sending / acc_fact)
 
     date_time = [None, None]
     date_time[0] = dateutil.parser.parse(app_data[0][:-1].split(',')[0])
