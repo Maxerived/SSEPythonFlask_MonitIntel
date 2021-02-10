@@ -8,7 +8,7 @@ function openFirstForm() {
     navitem[0].className += " active";
 }
 
-function openForm(evt, cityName) {
+function openForm(evt, id) {
     var i, tabcontent, navitem;
     tabcontent = document.getElementsByClassName("tabcontent");
     for (i = 0; i < tabcontent.length; i++) {
@@ -18,7 +18,7 @@ function openForm(evt, cityName) {
     for (i = 0; i < navitem.length; i++) {
         navitem[i].className = navitem[i].className.replace(" active", "");
     }
-    document.getElementById(cityName).style.display = "block";
+    document.getElementById(id).style.display = "block";
     evt.currentTarget.className += " active";
 }
 

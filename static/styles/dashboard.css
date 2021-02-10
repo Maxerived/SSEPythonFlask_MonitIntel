@@ -1,11 +1,36 @@
-html,body{
+html, body {
     background-image: url("../img/iot-background.jpg");
     background-size: cover;
-    background-repeat: no-repeat;
+    background-repeat: repeat;
     height: 100%;
     font-family: 'Numans', sans-serif;
-    }
-    
+    position:relative
+}
+
 .navbar {
     opacity: 0.8;
+}
+
+.graph-container {
+    height: auto;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 30px;
+    margin: 30px;
+}
+
+.right{
+    width: 25%;
+}
+
+.left{
+    width: 70%;
+}
+
+.top{
+    position: absolute;
+    top: 40px;
+    right: 0;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 30px;
+    margin: 30px;
 }

@@ -31,6 +31,9 @@ function updateChart(canvasElements) {
                 else if (data[appareil].anomaly === 'true') {
                     config[appareil].data.datasets[0].backgroundColor.push('rgb(255, 99, 132)');
                     config[appareil].data.datasets[0].borderColor.push('rgb(255, 99, 132)');
+                    //affiche une alerte dans historique
+                    value=config[appareil].data.datasets[0].data[0];
+                    showAlert(appareil,value);
                 }
                 else if (data[appareil].anomaly === 'null') {
                     config[appareil].data.datasets[0].backgroundColor.push('rgb(0, 0, 0)');
@@ -99,4 +102,33 @@ function setConfig(canvasElements) {
         lineChart[appareil] = new Chart(context[appareil], config[appareil]);
 
     }
+}
+
+function check(appareil) {
+    var thisCheckbox = document.getElementById(appareil.id);
+    var container = document.getElementById("container-" + appareil.id.split("-")[1])
+    if (thisCheckbox.checked) {
+        container.style.display = "block";
+    } else {
+        container.style.display = "none";
+    }
+}
+
+
+function openTab(evt, id) {
+    var i, tabcontent, navitem;
+    tabcontent = document.getElementsByClassName("tabcontent");
+    for (i = 0; i < tabcontent.length; i++) {
+        tabcontent[i].style.display = "none";
+    }
+    navitem = document.getElementsByClassName("nav-item");
+    for (i = 0; i < navitem.length; i++) {
+        navitem[i].className = navitem[i].className.replace(" active", "");
+    }
+    document.getElementById("tab-"+id).style.display = "block";
+    evt.currentTarget.className += " active";
+}
+
+function showAlert(appareil,value){
+    alert("Anomalies : " + appareil + " values "+value);
 }

@@ -10,7 +10,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <!--Custom styles-->
-    <link rel="icon" type="image/png" href="/static/img/favicon.ico"/>
+    <link rel="icon" type="image/png" href="/static/img/favicon.ico" />
     <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='styles/dashboard.css') }}">
     <script src="{{ url_for('static',filename='js/dashboard.js') }}"></script>
 </head>
@@ -25,10 +25,10 @@
 
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <ul class="navbar-nav mr-auto">
-                <li class="nav-item" onclick="openForm(event, 'adduser')">
+                <li class="nav-item" onclick="openTab(event, 'dashboard')">
                     <a class="nav-link tablinks" href="#">Dashboard</a>
                 </li>
-                <li class="nav-item" onclick="openForm(event, 'adduser')">
+                <li class="nav-item" onclick="openTab(event, 'historique')">
                     <a class="nav-link tablinks" href="#historique">Historique</a>
                 </li>
             </ul>
@@ -36,17 +36,34 @@
                 onclick="window.location.href='/logout';">Logout</button>
         </div>
     </nav>
-    
+
+    <div id="tab-dashboard" class="tabcontent">
+    <div class="left">
         {% for appareil in appareils %}
-        <div class="col-12">
-            <div class="card">
-                <div class="card-body">
-                    <canvas id={{appareil}} class="graph"></canvas>
-                </div>
-            </div>
+        <div class="graph-container" id=container-{{appareil}}>
+            <canvas id={{appareil}} class="graph"></canvas>
         </div>
         {% endfor %}
-   
+    </div>
+
+
+    <div class="right">
+        <div class="top">
+            <h3>View</h3>
+            {% for appareil in appareils %}
+            <input type="checkbox" class="form-check-input" id=checkbox-{{appareil}} onclick="check(this);" checked>
+            <label class="form-check-label">{{appareil}}</label>
+            <br>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<div id="tab-historique"  class="tabcontent">
+
+</div>
+
+
     <!--suppress JSUnresolvedLibraryURL -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
     <!--suppress JSUnresolvedLibraryURL -->
