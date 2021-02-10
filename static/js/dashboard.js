@@ -65,7 +65,7 @@ function setConfig(canvasElements) {
                 responsive: true,
                 title: {
                     display: true,
-                    text: 'Relevé du capteur ' + appareil,
+                    text: `Relevé du capteur ${appareil}`,
                 },
                 tooltips: {
                     mode: 'index',
@@ -106,7 +106,7 @@ function setConfig(canvasElements) {
 
 function check(appareil) {
     var thisCheckbox = document.getElementById(appareil.id);
-    var container = document.getElementById("container-" + appareil.id.split("-")[1])
+    var container = document.getElementById(`container-${appareil.id.split("-")[1]}`)
     if (thisCheckbox.checked) {
         container.style.display = "block";
     } else {
@@ -130,5 +130,5 @@ function openTab(evt, id) {
 }
 
 function showAlert(appareil,value){
-    alert("Anomalies : " + appareil + " values "+value);
+    alert(`Anomalies : ${appareil} values ${value}`);
 }

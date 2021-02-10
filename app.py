@@ -64,14 +64,9 @@ def login_required(f):
 @login_required
 def index():
 
-    return """
-        <link rel="icon" type="image/png" href="/static/img/favicon.ico"/>
-        <button onclick="window.location.href='/graph';">Dashboard</button>
-        <button onclick="window.location.href='/logout';">Logout</button>
-        <p>Logged in as %s<p>
-    """ % escape(
-        session["username"]
-    )
+    session["appareils"] = get_seen_devices(session["username"])
+
+    return render_template("dashboard.html", appareils=session["appareils"], username=session["username"])
 
 
 @app.route("/admin")
@@ -386,21 +381,6 @@ def add_post_type():
     return redirect(url_for("admin"))
 
 
-@app.route("/graph")
-@login_required
-def graph():
-
-    if session.get("username") is None:
-        return redirect(url_for("login"))
-
-    if session.get("username") == "admin":
-        return redirect(url_for("admin"))
-    
-    session["appareils"] = get_seen_devices(session["username"])
-    
-    return render_template("graph.html", appareils=session["appareils"])
-
-
 @app.route('/chart-data')
 @login_required
 def chart_data():
@@ -442,6 +422,7 @@ def chart_data():
                 iter += 1
                 json_data = json.dumps(data)
                 yield f"data:{json_data}\n\n"
+                time.sleep(1 / (2 * quelen * acc_fact))
 
             else:
 
