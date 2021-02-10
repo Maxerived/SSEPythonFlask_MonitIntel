@@ -39,14 +39,16 @@ def index():
         return redirect(url_for("admin"))
 
     if session.get("username") is not None:
-        return """
-            <link rel="icon" type="image/png" href="/static/img/favicon.ico"/>
-            <button onclick="window.location.href='/graph';">Dashboard</button>
-            <button onclick="window.location.href='/logout';">Logout</button>
-            <p>Logged in as %s<p>
-        """ % escape(
-            session["username"]
-        )
+        # return """
+        #     <link rel="icon" type="image/png" href="/static/img/favicon.ico"/>
+        #     <button onclick="window.location.href='/graph';">Dashboard</button>
+        #     <button onclick="window.location.href='/logout';">Logout</button>
+        #     <p>Logged in as %s<p>
+        # """ % escape(
+        #     session["username"]
+        # )
+        session["appareils"] = get_seen_devices(session["username"])
+        return render_template("dashboard.html", appareils=session["appareils"],username=session["username"])
 
     return redirect(url_for("login"))
 
