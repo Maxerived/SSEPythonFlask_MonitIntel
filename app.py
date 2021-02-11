@@ -60,57 +60,12 @@ def login_required(f):
     return decorated_function
 
 
-@app.route("/")
-@login_required
-def index():
-
-    session["appareils"] = get_seen_devices(session["username"])
-
-    return render_template("dashboard.html", appareils=session["appareils"], username=session["username"])
-
-
-@app.route("/admin")
-@admin_required
-def admin():
-
-    # Recupération des données à insérer dans les menus déroulants
-
-    data = get_fields_data()
-    postes = [""] + data[0]
-    sites = data[1]
-    # exception ! Choix vide fait dans html, pour limiter les choix selon le poste choisi.
-    chaines = data[2]
-    # exception ! Choix vide fait dans html, pour limiter les choix selon le site choisi.
-    lignes = [""] + data[3]
-    types = [""] + data[4]
-    types_descr = [""] + data[5]
-    nivs_resp = [""] + data[6]
-    utilisateurs = data[7][1:] # Suppression de l'admin dans les choix possibles
-    
-    types_app = [""]
-    for i in range(1, len(types)):
-        types_app.append(types[i] + "_" + types_descr[i])
-
-    return render_template(
-        "admin.html",
-        postes=postes,
-        sites=sites,
-        chaines=chaines,
-        lignes=lignes,
-        types=types_app,
-        nivs_resp=nivs_resp,
-        types_for_poste=types_app + ["TOUS"],
-        utilisateurs=utilisateurs,
-        error=session.get("error"),
-    )
-
-
 @app.route("/login", methods=["GET", "POST"])
 def login():
 
-    if "username" in session:
+    if session.get('username') is not None:
 
-        if session["username"] == "admin":
+        if session.get('username') == "admin":
             return redirect(url_for("admin"))
 
         return redirect(url_for("index"))
@@ -131,7 +86,7 @@ def login():
         # Si l'identifiant n'est pas dans la base de données
 
         if hash_mdp == None:
-            error = "[ERROR] Cet identifiant n'existe pas dans la base de données."
+            error = "Cet identifiant n'existe pas dans la base de données."
             return render_template("login.html", error=error)
 
         # Récupération du salt et calcul du hash avec le salt et le mdp entré apr l'utilisateur
@@ -175,6 +130,124 @@ def logout():
     session.pop("error", None)
     
     return redirect(url_for("login"))
+
+
+@app.route("/", methods=["GET"])
+@login_required
+def index():
+
+    session["appareils"] = get_seen_devices(session["username"])
+
+    return render_template("dashboard.html", appareils=session["appareils"], username=session["username"])
+
+
+@app.route("/change_password", methods=["POST"])
+@login_required
+def change_password():
+
+    if request.method == "POST":
+
+        # Récupération des valeurs entrées sur le formlaire
+
+        input_psw = request.form['input_psw']
+        new_psw = request.form['new_psw']
+        new_psw2 = request.form['new_psw2']
+
+        if new_psw != new_psw2:
+            error = "Les deux instances du nouveau mot de passe sont différentes."
+            return render_template("dashboard.html", error=error)
+
+        # Récupération du hash_mdp dans la base de données à partir de l'identifiant
+
+        hash_actual_psw = get_hash_from_db(session.get('username'))
+        print("[INFO] Hash récupéré")
+
+        # Si l'identifiant n'est pas dans la base de données
+
+        if hash_actual_psw == None:
+            error = "Cet identifiant n'existe pas dans la base de données."
+            return render_template("dashboard.html", error=error)
+
+        # Récupération du salt et calcul du hash avec le salt et le mot de passe actuel entré par l'utilisateur
+
+        salt = hash_actual_psw[:32]
+        key = hashlib.pbkdf2_hmac(
+            "sha256", input_psw.encode("utf-8"), salt, 100000, dklen=128
+        )
+
+        # Si le mot de passe est incorrect
+
+        if hash_actual_psw[32:] != key:
+            print("[ERROR] Mot de passe incorrect")
+            error = "Le mot de passe est incorrect."
+            return render_template("dashboard.html", error=error)
+
+        # Si le mot de passe est correct et que les deux instances
+        # du nouveau mot de passe sont les mêmes
+
+        salt = os.urandom(32)
+        key = hashlib.pbkdf2_hmac(
+            "sha256", new_psw.encode("utf-8"), salt, 100000, dklen=128
+        )
+        hash_new_psw = salt + key
+
+        # Connexion à la base de données
+
+        conn = sqlite3.connect("profils_utilisateurs.db")
+        cur = conn.cursor()
+        print("[INFO] Connexion réussie à SQLite")
+
+        # Insertion d'un nouvel utilisateur dans la base de données
+
+        cur.execute(
+            """UPDATE utilisateurs SET hash_mdp = ? WHERE identifiant = ?""",
+            (hash_new_psw, session.get('username'))
+        )
+        error = "Le mot de passe a été modifié avec succès"
+        print("[INFO] Mot de passe modifié avec succès")
+
+        cur.close()
+        conn.commit()
+        conn.close()
+        print("[INFO] Connexion SQlite fermée")
+
+    return render_template("dashboard.html", error=error)
+
+
+@app.route("/admin", methods=["GET"])
+@admin_required
+def admin():
+
+    # Recupération des données à insérer dans les menus déroulants
+
+    data = get_fields_data()
+    postes = [""] + data[0]
+    sites = data[1]
+    # exception ! Choix vide fait dans html, pour limiter les choix selon le poste choisi.
+    chaines = data[2]
+    # exception ! Choix vide fait dans html, pour limiter les choix selon le site choisi.
+    lignes = [""] + data[3]
+    types = [""] + data[4]
+    types_descr = [""] + data[5]
+    nivs_resp = [""] + data[6]
+    utilisateurs = data[7][1:] # Suppression de l'admin dans les choix possibles
+    
+    types_app = [""]
+    for i in range(1, len(types)):
+        types_app.append(types[i] + "_" + types_descr[i])
+
+    return render_template(
+        "admin.html",
+        postes=postes,
+        sites=sites,
+        chaines=chaines,
+        lignes=lignes,
+        types=types_app,
+        nivs_resp=nivs_resp,
+        types_for_poste=types_app + ["TOUS"],
+        utilisateurs=utilisateurs,
+        error=session.get("error"),
+    )
 
 
 @app.route("/admin/add_user", methods=["POST"])
