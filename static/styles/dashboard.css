@@ -34,3 +34,10 @@ html, body {
     padding: 30px;
     margin: 30px;
 }
+
+.form{
+    height: auto;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 30px;
+    margin: 30px;
+}

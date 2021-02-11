@@ -61,39 +61,35 @@
         </div>
     </div>
 
-    <div id="tab-historique"  class="tabcontent">
+    <div id="tab-historique" class="tabcontent">
 
     </div>
 
     <div id="tab-changepsw" class="tabcontent">
-        <form action="/change_password" method="post">
-            <div class="row">
-                <div class="col-6">
-                    <label for="input_psw"><b>Mot de passe actuel</b></label>
-                    <br>
-                    <input class="form-control" type="password" name="input_psw" required>
-                    <br>
-                    <label for="new_psw"><b>Nouveau mot de passe</b></label>
-                    <br>
-                    <input class="form-control" type="password" name="new_psw" required>
-                    <br>
-                    <label for="new_psw2"><b>Nouveau mot de passe</b></label>
-                    <br>
-                    <input class="form-control" type="password" name="new_psw2" required>
-                    <br>
-                </div>
-            </div>
-            <div class="row">
+        <div class="form">
+            <form action="/change_password" method="post">
+                <label for="input_psw"><b>Mot de passe actuel</b></label>
+                <br>
+                <input class="form-control" type="password" name="input_psw" required>
+                <br>
+                <label for="new_psw"><b>Nouveau mot de passe</b></label>
+                <br>
+                <input class="form-control" type="password" name="new_psw" required>
+                <br>
+                <label for="new_psw2"><b>Nouveau mot de passe</b></label>
+                <br>
+                <input class="form-control" type="password" name="new_psw2" required>
+                <br>
                 <div class="col-10 error">
                     {% if error %}
                     <strong>Info :</strong> {{ error }}
                     {% endif %}
                 </div>
-                <div class="col-2">
-                    <button class="btn btn-success" type="submit">Valider</button>
-                </div>
-            </div>
-        </form>
+                <br>
+                <button class="btn btn-success" type="submit">Valider</button>
+                
+            </form>
+        </div>
     </div>
 
 
