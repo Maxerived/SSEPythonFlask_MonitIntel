@@ -85,7 +85,7 @@
                     <br>
                     <label for="ligne"><b>Ligne de production</b></label>
                     <br>
-                    <select class="form-control" name="ligne">
+                    <select class="form-control" name="ligne" id="adduser-ligne">
                         {% for ligne in lignes %}
                         <option value="{{ligne}}">{{ligne}}</option>
                         {% endfor %}
@@ -169,7 +169,7 @@
                     <br>
                     <label for="ligne"><b>Ligne de production</b></label>
                     <br>
-                    <select class="form-control" name="ligne">
+                    <select class="form-control" name="ligne" id="adddevice-ligne">
                         {% for ligne in lignes %}
                         <option value="{{ligne}}">{{ligne}}</option>
                         {% endfor %}
