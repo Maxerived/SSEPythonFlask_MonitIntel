@@ -9,6 +9,11 @@ html, body {
 
 .navbar {
     opacity: 0.8;
+    vertical-align: middle;
+}
+
+.tabcontent {
+    display: none;
 }
 
 .graph-container {
@@ -40,4 +45,8 @@ html, body {
     background: rgba(255, 255, 255, 0.9);
     padding: 30px;
     margin: 30px;
+}
+
+.error {
+    color: red;
 }

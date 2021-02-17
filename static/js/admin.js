@@ -39,17 +39,37 @@ function changeChaine(idTab) {
 function changeSite(element, idTab) {
     var niveau = element.options[element.selectedIndex].attributes.name.value;
     var selectSite = document.getElementById(idTab + "-site");
+    var selectChaine= document.getElementById(idTab + "-chaine");
+    var selectLigne = document.getElementById(idTab + "-ligne");
     var dirGenerale = "direction générale";
+    var respSite="site";
+    var respChaine = "chaine";
     if (niveau == dirGenerale) {
-        for (i = 0; i < selectSite.options.length; i++) {
-            selectSite.options[i].style.display = "none";
-        }
+        changeSelectVisibility(selectSite,"none",0);
+        changeSelectVisibility(selectChaine,"none",1);
+        changeSelectVisibility(selectLigne,"none",1);
         document.getElementsByName(idTab + dirGenerale).forEach(element => element.style.display = "block");
+    } else if (niveau == respSite) {
+        changeSelectVisibility(selectSite,"block",0);
+        changeSelectVisibility(selectChaine,"none",1);
+        changeSelectVisibility(selectLigne,"none",1);
+        document.getElementsByName(idTab + dirGenerale).forEach(element => element.style.display = "none");
+    } else if (niveau == respChaine) {
+        changeSelectVisibility(selectSite,"block",0);
+        changeSelectVisibility(selectChaine,"block",0);
+        changeSelectVisibility(selectLigne,"none",1);
+        document.getElementsByName(idTab + dirGenerale).forEach(element => element.style.display = "none");
     } else {
-        for (i = 0; i < selectSite.options.length; i++) {
-            selectSite.options[i].style.display = "block";
-        }
+        changeSelectVisibility(selectSite,"block",0);
+        changeSelectVisibility(selectChaine,"block",0);
+        changeSelectVisibility(selectLigne,"block",0);
         document.getElementsByName(idTab + dirGenerale).forEach(element => element.style.display = "none");
     }
-    selectSite.options[0].selected = 'selected'
+    selectSite.options[0].selected = 'selected';
+}
+
+function changeSelectVisibility(select, visib, start) {
+    for (i = start; i < select.options.length; i++) {
+        select.options[i].style.display = visib;
+    }
 }

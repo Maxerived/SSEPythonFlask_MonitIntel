@@ -3,6 +3,7 @@ const context = {}
 const lineChart = {}
 const source = new EventSource("/chart-data");
 $(document).ready(function () {
+    openFirstTab();
     var canvasElements = document.getElementsByClassName("graph");
     setConfig(canvasElements);
     updateChart(canvasElements);
@@ -114,6 +115,16 @@ function check(appareil) {
     }
 }
 
+function openFirstTab() {
+    var tabcontent;
+    var navitem;
+    tabcontent = document.getElementsByClassName("tabcontent");
+    navitem = document.getElementsByClassName("nav-item");
+
+    tabcontent[0].style.display = "block";
+    navitem[0].className += " active";
+}
+
 
 function openTab(evt, id) {
     var i, tabcontent, navitem;
@@ -130,5 +141,5 @@ function openTab(evt, id) {
 }
 
 function showAlert(appareil,value){
-    alert(`Anomalies : ${appareil} values ${value}`);
+    //alert(`Anomalies : ${appareil} values ${value}`);
 }
