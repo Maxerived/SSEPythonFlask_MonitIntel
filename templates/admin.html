@@ -208,7 +208,7 @@
                     <br>
                     <label for="app_vus"><b>Type d'appareil en visibilité</b></label>
                     <br>
-                    <select class="form-control" name="type_for_poste">
+                    <select class="form-control" name="type_for_poste" multiple>
                         {% for type_for_poste in types_for_poste %}
                         <option value="{{type_for_poste}}">{{type_for_poste}}</option>
                         {% endfor %}
