@@ -208,12 +208,12 @@ cur.execute(
 # Insertion de types d'appareil
 
 for type_appareil in [
-    ["P1", "Poids cuve matière première"],
-    ["VM1", "Vitesse malaxage"],
-    ["VT1", "Vitesse tapis ligne préparation"],
-    ["T1", "Température four"],
-    ["VT2", "Vitesse tapis ligne cuisson"],
-    ["P2", "Poids produit fini"],
+    ["P1", "Poids cuve matière première (kg)"],
+    ["VM1", "Vitesse malaxage (tr/min)"],
+    ["VT1", "Vitesse tapis ligne préparation (m/s)"],
+    ["T1", "Température four (°C)"],
+    ["VT2", "Vitesse tapis ligne cuisson (m/s)"],
+    ["P2", "Poids produit fini (kg)"],
 ]:
     cur.execute(
         """INSERT INTO types_appareil

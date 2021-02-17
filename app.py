@@ -3,16 +3,16 @@
 import hashlib
 import json
 import os
+import requests
 import secrets
 import sqlite3
 import time
-from collections import deque
-from datetime import datetime
+from contextlib import closing
 from functools import wraps
+from getdata import *
 
 from flask import (
     Flask,
-    escape,
     redirect,
     render_template,
     request,
@@ -21,9 +21,6 @@ from flask import (
     url_for,
 )
 
-from pubsub import pub
-
-from getdata import *
 
 app = Flask(__name__)
 
@@ -157,7 +154,8 @@ def change_password():
             error = "Les deux instances du nouveau mot de passe sont différentes."
             return render_template("dashboard.html", error=error)
 
-        # Récupération du hash_mdp dans la base de données à partir de l'identifiant
+        # Récupération du hash_mdp dans la base de données
+        # à partir de l'identifiant
 
         hash_actual_psw = get_hash_from_db(session.get('username'))
         print("[INFO] Hash récupéré")
@@ -168,7 +166,8 @@ def change_password():
             error = "Cet identifiant n'existe pas dans la base de données."
             return render_template("dashboard.html", error=error)
 
-        # Récupération du salt et calcul du hash avec le salt et le mot de passe actuel entré par l'utilisateur
+        # Récupération du salt et calcul du hash avec le salt
+        # et le mot de passe actuel entré par l'utilisateur
 
         salt = hash_actual_psw[:32]
         key = hashlib.pbkdf2_hmac(
@@ -211,7 +210,10 @@ def change_password():
         conn.close()
         print("[INFO] Connexion SQlite fermée")
 
-    return render_template("dashboard.html", error=error)
+    return render_template("dashboard.html", \
+                appareils=session["appareils"], \
+                username=session["username"], \
+                error=error)
 
 
 @app.route("/admin", methods=["GET"])
@@ -525,7 +527,27 @@ def chart_data():
 
     return Response(generate_data(), mimetype="text/event-stream")
 
+"""
+@app.route('/device_data')
+def send_device_data():
 
+    def generate_device_data():
+
+        yield '{"hello" : "world"}'
+        time.sleep(0.1)
+
+    return Response(generate_device_data(), mimetype="type/event-stream")
+
+
+@app.route('/get_data')
+def get_data():
+
+    r = requests.get(request.host_url + url_for('send_device_data'), stream=True)
+    while r.raw:
+        print(r.raw.read())
+        time.sleep(
+    pass
+"""
 
 if __name__ == "__main__":
     app.run(debug=True, ssl_context=("cert.pem", "key.pem"))
