@@ -441,7 +441,7 @@ def add_post_type():
     post_form = request.form
     poste = post_form["poste"]
     niv_resp = post_form["niv_resp"]
-    type_for_poste = [post_form["type_for_poste"].split("_")[0]]
+    type_for_poste = post_form.getlist('type_for_poste')
 
     # Connexion à la base de données
 
@@ -453,6 +453,7 @@ def add_post_type():
 
     try:
         for type_app in type_for_poste:
+            type_app = type_app.split('_', 1)[0]
             cur.execute(
                 """INSERT INTO postes
                         (poste,
