@@ -131,9 +131,10 @@ for chaine in ["A1", "B1", "B2", "B3", "C1", "C2"]:
 
 cur.execute(
     """CREATE TABLE IF NOT EXISTS postes
-            (poste TEXT PRIMARY KEY,
+            (poste TEXT,
             niveau_de_responsabilite TEXT,
-            appareils_vus TEXT)"""
+            appareils_vus TEXT,
+            PRIMARY KEY (poste, appareils_vus))"""
 )
 
 # Insertion de postes

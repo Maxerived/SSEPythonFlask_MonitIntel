@@ -57,7 +57,26 @@ def login_required(f):
     return decorated_function
 
 
+def templated(template=None):
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            template_name = template
+            if template_name is None:
+                template_name = request.endpoint \
+                    .replace('.', '/') + '.html'
+            ctx = f(*args, **kwargs)
+            if ctx is None:
+                ctx = {}
+            elif not isinstance(ctx, dict):
+                return ctx
+            return render_template(template_name, **ctx)
+        return decorated_function
+    return decorator
+
+
 @app.route("/login", methods=["GET", "POST"])
+@templated()
 def login():
 
     if session.get('username') is not None:
@@ -84,7 +103,7 @@ def login():
 
         if hash_mdp == None:
             error = "Cet identifiant n'existe pas dans la base de données."
-            return render_template("login.html", error=error)
+            return dict(error=error)
 
         # Récupération du salt et calcul du hash avec le salt et le mdp entré apr l'utilisateur
 
@@ -98,7 +117,7 @@ def login():
         if hash_mdp[32:] != key:
             print("[ERROR] Mot de passe incorrect")
             error = "Le mot de passe est incorrect."
-            return render_template("login.html", error=error)
+            return dict(error=error)
 
         # Si l'identifiant et le mot de passe sont corrects,
         # instanciation de la session avec l'identifiant
@@ -116,7 +135,7 @@ def login():
 
         return redirect(url_for("index"))
 
-    return render_template("login.html")
+    return {}
 
 
 @app.route("/logout")
@@ -131,15 +150,17 @@ def logout():
 
 @app.route("/", methods=["GET"])
 @login_required
+@templated("dashboard.html")
 def index():
 
     session["appareils"] = get_seen_devices(session["username"])
 
-    return render_template("dashboard.html", appareils=session["appareils"], username=session["username"])
+    return dict(appareils=session["appareils"], username=session["username"])
 
 
 @app.route("/change_password", methods=["POST"])
 @login_required
+@templated("dashboard.html")
 def change_password():
 
     if request.method == "POST":
@@ -152,7 +173,9 @@ def change_password():
 
         if new_psw != new_psw2:
             error = "Les deux instances du nouveau mot de passe sont différentes."
-            return render_template("dashboard.html", error=error)
+            return dict(appareils=session["appareils"],
+                        username=session["username"],
+                        error=error)
 
         # Récupération du hash_mdp dans la base de données
         # à partir de l'identifiant
@@ -164,7 +187,9 @@ def change_password():
 
         if hash_actual_psw == None:
             error = "Cet identifiant n'existe pas dans la base de données."
-            return render_template("dashboard.html", error=error)
+            return dict(appareils=session["appareils"],
+                        username=session["username"],
+                        error=error)
 
         # Récupération du salt et calcul du hash avec le salt
         # et le mot de passe actuel entré par l'utilisateur
@@ -179,7 +204,9 @@ def change_password():
         if hash_actual_psw[32:] != key:
             print("[ERROR] Mot de passe incorrect")
             error = "Le mot de passe est incorrect."
-            return render_template("dashboard.html", error=error)
+            return dict(appareils=session["appareils"],
+                        username=session["username"],
+                        error=error)
 
         # Si le mot de passe est correct et que les deux instances
         # du nouveau mot de passe sont les mêmes
@@ -210,14 +237,14 @@ def change_password():
         conn.close()
         print("[INFO] Connexion SQlite fermée")
 
-    return render_template("dashboard.html", \
-                appareils=session["appareils"], \
-                username=session["username"], \
+    return dict(appareils=session["appareils"],
+                username=session["username"],
                 error=error)
 
 
 @app.route("/admin", methods=["GET"])
 @admin_required
+@templated('admin.html')
 def admin():
 
     # Recupération des données à insérer dans les menus déroulants
@@ -238,18 +265,15 @@ def admin():
     for i in range(1, len(types)):
         types_app.append(types[i] + "_" + types_descr[i])
 
-    return render_template(
-        "admin.html",
-        postes=postes,
-        sites=sites,
-        chaines=chaines,
-        lignes=lignes,
-        types=types_app,
-        nivs_resp=nivs_resp,
-        types_for_poste=types_app + ["TOUS"],
-        utilisateurs=utilisateurs,
-        error=session.get("error"),
-    )
+    return dict(postes=postes,
+                sites=sites,
+                chaines=chaines,
+                lignes=lignes,
+                types=types_app,
+                nivs_resp=nivs_resp,
+                types_for_poste=types_app + ["TOUS"],
+                utilisateurs=utilisateurs,
+                error=session.get("error"))
 
 
 @app.route("/admin/add_user", methods=["POST"])
@@ -335,7 +359,7 @@ def delete_user():
     try:
         cur.execute("""DELETE FROM utilisateurs WHERE identifiant = ?""", (identifiant,))
         error = "Utilisateur {} supprimé de la base de données".format(identifiant)
-        print("[INFO] Utilisateur {} supprimé de la base de données avec succès".format(identifiant))
+        print("[INFO] {} avec succès".format(error))
 
     except:
         error = "Impossible de supprimer l'utilisateur " + identifiant
@@ -417,7 +441,7 @@ def add_post_type():
     post_form = request.form
     poste = post_form["poste"]
     niv_resp = post_form["niv_resp"]
-    type_for_poste = post_form["type_for_poste"].split("_")[0]
+    type_for_poste = [post_form["type_for_poste"].split("_")[0]]
 
     # Connexion à la base de données
 
@@ -428,13 +452,14 @@ def add_post_type():
     # Insertion d'un nouvel appareil dans la base de données
 
     try:
-        cur.execute(
-            """INSERT INTO postes
-                    (poste,
-                    niveau_de_responsabilite,
-                    appareils_vus) VALUES (?, ?, ?)""",
-            (poste, niv_resp, type_for_poste),
-        )
+        for type_app in type_for_poste:
+            cur.execute(
+                """INSERT INTO postes
+                        (poste,
+                        niveau_de_responsabilite,
+                        appareils_vus) VALUES (?, ?, ?)""",
+                (poste, niv_resp, type_app),
+            )
         error = "Nouveau type de poste intégré dans la base de données"
         print("[INFO] Type de poste intégré dans la base de données avec succès")
 

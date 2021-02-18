@@ -137,9 +137,10 @@ def get_seen_devices(username):
     )
     res = cur.fetchall()[0]
     niv_resp = res[0]
-    type_app = res[1]
-
+    type_app = res[1] # type d'appareil(s) vu(s) par un utilisateur occupant le poste considéré
+    # Va falloir modifier si on réussit à séléctionner plusieurs appareils
     types_app = []
+
     if type_app == "TOUS":
         cur.execute("SELECT type_appareil FROM types_appareil")
         res = cur.fetchall()
