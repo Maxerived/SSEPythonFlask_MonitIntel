@@ -17,43 +17,14 @@ acc_fact = 1
 nb_data = 2000
 
 
-def get_hash_from_db(identifiant):
-
-    # Connexion à la base de données
-
-    conn = sqlite3.connect("profils_utilisateurs.db")
-    cur = conn.cursor()
-    print("[INFO] Connexion réussie à SQLite")
-
-    # Récupération du hash_mdp à partir de l'identifiant
-
-    cur.execute(
-        "SELECT hash_mdp FROM utilisateurs WHERE identifiant = ?", (identifiant,)
-    )
-    res = cur.fetchall()
-
-    # Fermeture de la base de données
-
-    cur.close()
-    conn.close()
-    print("[INFO] Connexion SQlite fermée")
-
-    if len(res) == 0:
-        return None
-
-    return res[0][0]
-
-
 def get_fields_data():
 
     # Connexion à la base de données
-
     conn = sqlite3.connect("profils_utilisateurs.db")
     cur = conn.cursor()
     print("[INFO] Connexion réussie à SQLite")
 
     # Récupération des données
-
     postes = []
     cur.execute("SELECT poste,niveau_de_responsabilite FROM postes")
     postes = cur.fetchall()
@@ -101,7 +72,6 @@ def get_fields_data():
         utilisateurs.append(utilisateur[0])
 
     # Fermeture de la base de données
-
     cur.close()
     conn.close()
     print("[INFO] Connexion SQlite fermée")
@@ -116,7 +86,6 @@ def get_seen_devices(username):
     print("[INFO] Connexion réussie à SQLite")
 
     # Récupération du poste tenu par l'utilisateur
-
     cur.execute(
         "SELECT site, chaine_service, ligne_de_production, \
         poste_tenu FROM utilisateurs WHERE identifiant = ?",
@@ -129,7 +98,6 @@ def get_seen_devices(username):
     poste = res[3]
 
     # Récupération des types d'appareil en visibilité par l'utilisateur
-
     cur.execute(
         "SELECT niveau_de_responsabilite, appareils_vus FROM postes \
         WHERE poste = ?",
