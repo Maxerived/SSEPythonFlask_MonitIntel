@@ -1,15 +1,12 @@
 """Fichier principal"""
 
-import hashlib
 import json
-import os
-import requests
 import secrets
-import sqlite3
 import time
-from contextlib import closing
 from functools import wraps
+from functions import *
 from getdata import *
+from login import *
 
 from flask import (
     Flask,
@@ -26,35 +23,6 @@ app = Flask(__name__)
 
 secret = secrets.token_urlsafe(32)
 app.secret_key = secret
-
-
-def admin_required(f):
-    """Décorateur pour vérifier que l'utilisateur est bien authentifié comme admin"""
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-    
-        if session.get('username') != 'admin':
-            return redirect(url_for('login'))
-    
-        return f(*args, **kwargs)
-    
-    return decorated_function
-
-
-def login_required(f):
-    """Décorateur pour vérifier que l'utilisateur est bien authentifié"""
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-    
-        if session.get('username') == 'admin':
-            return redirect(url_for('admin'))
-    
-        if session.get('username') is None:
-            return redirect(url_for('login'))
-    
-        return f(*args, **kwargs)
-    
-    return decorated_function
 
 
 def templated(template=None):
@@ -88,54 +56,20 @@ def login():
 
     if request.method == "POST":
 
-        # Récupération des valeurs entrées sur le formlaire
+        result = check_credentials(request.form["uname"], request.form["psw"])
 
-        auth_form = request.form
-        identifiant = auth_form["uname"]
-        input_mdp = auth_form["psw"]
+        # Si les credntials sont incorrects
+        if result is not "OK":
+            return dict(error=result)
 
-        # Récupération du hash_mdp dans la base de données à partir de l'identifiant
-
-        hash_mdp = get_hash_from_db(identifiant)
-        print("[INFO] Hash récupéré")
-
-        # Si l'identifiant n'est pas dans la base de données
-
-        if hash_mdp == None:
-            error = "Cet identifiant n'existe pas dans la base de données."
-            return dict(error=error)
-
-        # Récupération du salt et calcul du hash avec le salt et le mdp entré apr l'utilisateur
-
-        salt = hash_mdp[:32]
-        key = hashlib.pbkdf2_hmac(
-            "sha256", input_mdp.encode("utf-8"), salt, 100000, dklen=128
-        )
-
-        # Si le mot de passe est incorrect
-
-        if hash_mdp[32:] != key:
-            print("[ERROR] Mot de passe incorrect")
-            error = "Le mot de passe est incorrect."
-            return dict(error=error)
-
-        # Si l'identifiant et le mot de passe sont corrects,
-        # instanciation de la session avec l'identifiant
-
-        print("[INFO] Mot de passe correct")
-        error = "Vous êtes authentifié."
-        session["username"] = identifiant
+        session["username"] = request.form["uname"]
 
         # Si l'utilisateur est admin
-
-        if identifiant == "admin":
+        if request.form["uname"] == "admin":
             return redirect(url_for("admin"))
 
         # Pour un utilisateur lambda
-
         return redirect(url_for("index"))
-
-    return {}
 
 
 @app.route("/logout")
@@ -165,81 +99,14 @@ def change_password():
 
     if request.method == "POST":
 
-        # Récupération des valeurs entrées sur le formlaire
+        result = change_psw(session["username"],
+                            request.form['input_psw'],
+                            request.form['new_psw'],
+                            request.form['new_psw2'])
 
-        input_psw = request.form['input_psw']
-        new_psw = request.form['new_psw']
-        new_psw2 = request.form['new_psw2']
-
-        if new_psw != new_psw2:
-            error = "Les deux instances du nouveau mot de passe sont différentes."
-            return dict(appareils=session["appareils"],
-                        username=session["username"],
-                        error=error)
-
-        # Récupération du hash_mdp dans la base de données
-        # à partir de l'identifiant
-
-        hash_actual_psw = get_hash_from_db(session.get('username'))
-        print("[INFO] Hash récupéré")
-
-        # Si l'identifiant n'est pas dans la base de données
-
-        if hash_actual_psw == None:
-            error = "Cet identifiant n'existe pas dans la base de données."
-            return dict(appareils=session["appareils"],
-                        username=session["username"],
-                        error=error)
-
-        # Récupération du salt et calcul du hash avec le salt
-        # et le mot de passe actuel entré par l'utilisateur
-
-        salt = hash_actual_psw[:32]
-        key = hashlib.pbkdf2_hmac(
-            "sha256", input_psw.encode("utf-8"), salt, 100000, dklen=128
-        )
-
-        # Si le mot de passe est incorrect
-
-        if hash_actual_psw[32:] != key:
-            print("[ERROR] Mot de passe incorrect")
-            error = "Le mot de passe est incorrect."
-            return dict(appareils=session["appareils"],
-                        username=session["username"],
-                        error=error)
-
-        # Si le mot de passe est correct et que les deux instances
-        # du nouveau mot de passe sont les mêmes
-
-        salt = os.urandom(32)
-        key = hashlib.pbkdf2_hmac(
-            "sha256", new_psw.encode("utf-8"), salt, 100000, dklen=128
-        )
-        hash_new_psw = salt + key
-
-        # Connexion à la base de données
-
-        conn = sqlite3.connect("profils_utilisateurs.db")
-        cur = conn.cursor()
-        print("[INFO] Connexion réussie à SQLite")
-
-        # Insertion d'un nouvel utilisateur dans la base de données
-
-        cur.execute(
-            """UPDATE utilisateurs SET hash_mdp = ? WHERE identifiant = ?""",
-            (hash_new_psw, session.get('username'))
-        )
-        error = "Le mot de passe a été modifié avec succès"
-        print("[INFO] Mot de passe modifié avec succès")
-
-        cur.close()
-        conn.commit()
-        conn.close()
-        print("[INFO] Connexion SQlite fermée")
-
-    return dict(appareils=session["appareils"],
-                username=session["username"],
-                error=error)
+        return dict(appareils=session["appareils"],
+                    username=session["username"],
+                    error=result)
 
 
 @app.route("/admin", methods=["GET"])
@@ -250,30 +117,23 @@ def admin():
     # Recupération des données à insérer dans les menus déroulants
 
     data = get_fields_data()
-    postes = [""] + data[0]
-    sites = data[1]
-    # exception ! Choix vide fait dans html, pour limiter les choix selon le poste choisi.
-    chaines = data[2]
-    # exception ! Choix vide fait dans html, pour limiter les choix selon le site choisi.
-    lignes = [""] + data[3]
     types = [""] + data[4]
     types_descr = [""] + data[5]
-    nivs_resp = [""] + data[6]
-    utilisateurs = data[7][1:] # Suppression de l'admin dans les choix possibles
     
     types_app = [""]
     for i in range(1, len(types)):
         types_app.append(types[i] + "_" + types_descr[i])
 
-    return dict(postes=postes,
-                sites=sites,
-                chaines=chaines,
-                lignes=lignes,
+    return dict(postes=[""] + data[0],
+                sites=data[1],
+                chaines=data[2],
+                lignes=[""] + data[3],
                 types=types_app,
-                nivs_resp=nivs_resp,
+                nivs_resp=[""] + data[6],
                 types_for_poste=types_app + ["TOUS"],
-                utilisateurs=utilisateurs,
-                error=session.get("error"))
+                utilisateurs=data[7][1:],
+                error=session.get("error")
+                )
 
 
 @app.route("/admin/add_user", methods=["POST"])
@@ -281,59 +141,14 @@ def admin():
 def add_user():
     """Fonction pour ajouter un utilisateur dans la base de données"""
 
-    # Récupération des valeurs entrées sur le formulaire
-
-    user_form = request.form
-    identifiant = user_form["uname"]
-    site = user_form["site"]
-    chaine = user_form["chaine"]
-    ligne = user_form["ligne"]
-    poste = user_form["poste"]
-
-    # Création du hash du mot de passe et du salt associé
-
-    salt = os.urandom(32)
-    key = hashlib.pbkdf2_hmac(
-        "sha256", user_form["psw"].encode("utf-8"), salt, 100000, dklen=128
+    session["error"] = new_user(
+        request.form["uname"],
+        request.form['psw'],
+        request.form['site'],
+        request.form['chaine'],
+        request.form['ligne'],
+        request.form['poste']
     )
-    hash_mdp = salt + key
-
-    # Connexion à la base de données
-
-    conn = sqlite3.connect("profils_utilisateurs.db")
-    cur = conn.cursor()
-    print("[INFO] Connexion réussie à SQLite")
-
-    # Insertion d'un nouvel utilisateur dans la base de données
-
-    try:
-        cur.execute(
-            """INSERT INTO utilisateurs
-                    (identifiant,
-                    hash_mdp,
-                    site,
-                    chaine_service,
-                    ligne_de_production,
-                    poste_tenu) VALUES (?, ?, ?, ?, ?, ?)""",
-            (identifiant, hash_mdp, site, chaine, ligne, poste),
-        )
-        error = "Nouvel utilisateur intégré dans la base de données"
-        print("[INFO] Utilisateur intégré dans la base de données avec succès")
-
-    except sqlite3.IntegrityError:
-        error = "Cet identifiant existe déjà dans la base de données !!!"
-        print(
-            "[ERROR] Échec lors de l'insertion d'un nouvel utilisateur : identifiant déjà existant"
-        )
-
-    # Fermeture de la base de données
-    finally:
-        cur.close()
-        conn.commit()
-        conn.close()
-        print("[INFO] Connexion SQlite fermée")
-
-    session["error"] = error
 
     return redirect(url_for("admin"))
 
@@ -343,37 +158,7 @@ def add_user():
 def delete_user():
     """Fonction pour supprimer un utilisateur de la base de données"""
 
-    # Récupération de l'utilisateur à supprimer
-
-    user_form = request.form
-    identifiant = user_form["uname"]
-
-    # Connexion à la base de données
-
-    conn = sqlite3.connect("profils_utilisateurs.db")
-    cur = conn.cursor()
-    print("[INFO] Connexion réussie à SQLite")
-
-    # Insertion d'un nouvel utilisateur dans la base de données
-
-    try:
-        cur.execute("""DELETE FROM utilisateurs WHERE identifiant = ?""", (identifiant,))
-        error = "Utilisateur {} supprimé de la base de données".format(identifiant)
-        print("[INFO] {} avec succès".format(error))
-
-    except:
-        error = "Impossible de supprimer l'utilisateur " + identifiant
-        print("[ERROR] Échec lors de la suppression de l'utilisateur")
-
-    # Fermeture de la base de données
-
-    finally:
-        cur.close()
-        conn.commit()
-        conn.close()
-        print("[INFO] Connexion SQlite fermée")
-
-    session["error"] = error
+    session["error"] = del_user(request.form["uname"])
 
     return redirect(url_for("admin"))
 
@@ -383,50 +168,13 @@ def delete_user():
 def add_device():
     """Fonction pour ajouter un appareil dans la base de données"""
 
-    # Récupération des valeurs entrées sur le formulaire
-
-    device_form = request.form
-    appareil = device_form["appareil"]
-    type_app = device_form["type"].split("_")[0]
-    site = device_form["site"]
-    chaine = device_form["chaine"]
-    ligne = device_form["ligne"]
-
-    # Connexion à la base de données
-
-    conn = sqlite3.connect("profils_utilisateurs.db")
-    cur = conn.cursor()
-    print("[INFO] Connexion réussie à SQLite")
-
-    # Insertion d'un nouvel appareil dans la base de données
-
-    try:
-        cur.execute(
-            """INSERT INTO appareils
-                    (appareil,
-                    type,
-                    site_de_production,
-                    chaine_de_production,
-                    ligne_de_production) VALUES (?, ?, ?, ?, ?)""",
-            (appareil, type_app, site, chaine, ligne),
-        )
-        error = "Nouvel appareil intégré dans la base de données"
-        print("[INFO] Appareil intégré dans la base de données avec succès")
-
-    except sqlite3.IntegrityError:
-        error = "Cet appareil existe déjà dans la base de données !!!"
-        print(
-            "[ERROR] Échec lors de l'insertion d'un nouvel appareil : identifiant déjà existant"
-        )
-
-    # Fermeture de la base de données
-    finally:
-        cur.close()
-        conn.commit()
-        conn.close()
-        print("[INFO] Connexion SQlite fermée")
-
-    session["error"] = error
+    session["error"] = new_device(
+        request.form["chaine"] + "_" + request.form["type"].split("_")[0],
+        request.form["type"].split("_")[0],
+        request.form["site"],
+        request.form["chaine"],
+        request.form["ligne"]
+    )
 
     return redirect(url_for("admin"))
 
@@ -434,50 +182,13 @@ def add_device():
 @app.route("/admin/add_post_type", methods=["POST"])
 @admin_required
 def add_post_type():
-    """Fonction pour ajouter un appareil dans la base de données"""
+    """Fonction pour ajouter un type d'appareil dans la base de données"""
 
-    # Récupération des valeurs entrées sur le formulaire
-
-    post_form = request.form
-    poste = post_form["poste"]
-    niv_resp = post_form["niv_resp"]
-    type_for_poste = post_form.getlist('type_for_poste')
-
-    # Connexion à la base de données
-
-    conn = sqlite3.connect("profils_utilisateurs.db")
-    cur = conn.cursor()
-    print("[INFO] Connexion réussie à SQLite")
-
-    # Insertion d'un nouvel appareil dans la base de données
-
-    try:
-        for type_app in type_for_poste:
-            type_app = type_app.split('_', 1)[0]
-            cur.execute(
-                """INSERT INTO postes
-                        (poste,
-                        niveau_de_responsabilite,
-                        appareils_vus) VALUES (?, ?, ?)""",
-                (poste, niv_resp, type_app),
-            )
-        error = "Nouveau type de poste intégré dans la base de données"
-        print("[INFO] Type de poste intégré dans la base de données avec succès")
-
-    except sqlite3.IntegrityError:
-        error = "Ce type de poste existe déjà dans la base de données !!!"
-        print(
-            "[ERROR] Échec lors de l'insertion d'un nouveau type de poste : identifiant déjà existant"
-        )
-
-    # Fermeture de la base de données
-    finally:
-        cur.close()
-        conn.commit()
-        conn.close()
-        print("Connexion SQlite fermée")
-
-    session["error"] = error
+    session["error"] = new_post_type(
+        request.form["poste"],
+        request.form["niv_resp"],
+        request.form.getlist('type_for_poste')
+    )
 
     return redirect(url_for("admin"))
 
@@ -553,27 +264,6 @@ def chart_data():
 
     return Response(generate_data(), mimetype="text/event-stream")
 
-"""
-@app.route('/device_data')
-def send_device_data():
-
-    def generate_device_data():
-
-        yield '{"hello" : "world"}'
-        time.sleep(0.1)
-
-    return Response(generate_device_data(), mimetype="type/event-stream")
-
-
-@app.route('/get_data')
-def get_data():
-
-    r = requests.get(request.host_url + url_for('send_device_data'), stream=True)
-    while r.raw:
-        print(r.raw.read())
-        time.sleep(
-    pass
-"""
 
 if __name__ == "__main__":
     app.run(debug=True, ssl_context=("cert.pem", "key.pem"))
