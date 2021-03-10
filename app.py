@@ -56,7 +56,10 @@ def login():
 
     if request.method == "POST":
 
-        result = check_credentials(request.form["uname"], request.form["psw"])
+        result = check_credentials(
+            request.form["uname"],
+            request.form["psw"]
+        )
 
         # Si les credntials sont incorrects
         if result is not "OK":
@@ -89,7 +92,10 @@ def index():
 
     session["appareils"] = get_seen_devices(session["username"])
 
-    return dict(appareils=session["appareils"], username=session["username"])
+    return dict(
+        appareils=session["appareils"],
+        username=session["username"]
+    )
 
 
 @app.route("/change_password", methods=["POST"])
@@ -99,14 +105,18 @@ def change_password():
 
     if request.method == "POST":
 
-        result = change_psw(session["username"],
-                            request.form['input_psw'],
-                            request.form['new_psw'],
-                            request.form['new_psw2'])
+        result = change_psw(
+            session["username"],
+            request.form['new_psw'],
+            request.form['new_psw2'],
+            request.form['input_psw']
+        )
 
-        return dict(appareils=session["appareils"],
-                    username=session["username"],
-                    error=result)
+        return dict(
+            appareils=session["appareils"],
+            username=session["username"],
+            error=result
+        )
 
 
 @app.route("/admin", methods=["GET"])
@@ -117,23 +127,24 @@ def admin():
     # Recupération des données à insérer dans les menus déroulants
 
     data = get_fields_data()
-    types = [""] + data[4]
-    types_descr = [""] + data[5]
+    types = [""] + data["types"]
+    types_descr = [""] + data["types_descr"]
     
     types_app = [""]
     for i in range(1, len(types)):
         types_app.append(types[i] + "_" + types_descr[i])
 
-    return dict(postes=[""] + data[0],
-                sites=data[1],
-                chaines=data[2],
-                lignes=[""] + data[3],
-                types=types_app,
-                nivs_resp=[""] + data[6],
-                types_for_poste=types_app + ["TOUS"],
-                utilisateurs=data[7][1:],
-                error=session.get("error")
-                )
+    return dict(
+        postes=[""] + data["postes"],
+        sites=data["sites"],
+        chaines=data["chaines"],
+        lignes=[""] + data["lignes"],
+        types=types_app,
+        nivs_resp=[""] + data['nivs_resp'],
+        types_for_poste=types_app + ["TOUS"],
+        utilisateurs=data["utilisateurs"][1:],
+        error=session.get("error")
+    )
 
 
 @app.route("/admin/add_user", methods=["POST"])
@@ -159,6 +170,21 @@ def delete_user():
     """Fonction pour supprimer un utilisateur de la base de données"""
 
     session["error"] = del_user(request.form["uname"])
+
+    return redirect(url_for("admin"))
+
+
+@app.route("/admin/change_password", methods=["POST"])
+@admin_required
+def change_user_password():
+
+    if request.method == "POST":
+
+        session['error'] = change_psw(
+            request.form['username'],
+            request.form['new_psw'],
+            request.form['new_psw2']
+        )
 
     return redirect(url_for("admin"))
 

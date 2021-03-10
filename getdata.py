@@ -76,7 +76,16 @@ def get_fields_data():
     conn.close()
     print("[INFO] Connexion SQlite fermée")
 
-    return [postes, sites, chaines, lignes, types, types_descr, nivs_resp, utilisateurs]
+    return {
+        "postes": postes,
+        "sites" : sites,
+        "chaines" : chaines,
+        "lignes" : lignes,
+        "types" : types,
+        "types_descr" : types_descr,
+        "nivs_resp" : nivs_resp,
+        "utilisateurs" : utilisateurs
+    }
 
 
 def get_seen_devices(username):
