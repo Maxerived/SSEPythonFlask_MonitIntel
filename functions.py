@@ -34,7 +34,9 @@ def change_psw(identifiant, new_psw, new_psw2, current_psw=None):
                 )
 
                 print("[INFO] Mot de passe modifié avec succès")
-                result = "Le mot de passe a été modifié avec succès"
+                result = "Le mot de passe de l'utilisateur {} a été modifié avec succès".format(
+                    identifiant
+                )
 
             except:
                 result = "Une erreur est survenue lors du changement du mot de passe"
@@ -145,6 +147,34 @@ def new_device(appareil, type_app, site, chaine, ligne):
         print(
             "[ERROR] Échec lors de l'insertion d'un nouvel appareil : identifiant déjà existant"
         )
+
+    # Fermeture de la base de données
+    finally:
+        cur.close()
+        conn.commit()
+        conn.close()
+        print("[INFO] Connexion SQlite fermée")
+
+    return result
+
+
+def del_device(appareil):
+    """Fonction qui supprime un appareil de la base de données"""
+
+    try:
+        # Connexion à la base de données
+        conn = sqlite3.connect("profils_utilisateurs.db")
+        cur = conn.cursor()
+        print("[INFO] Connexion réussie à SQLite")
+
+        # Suppresion de l'utilisateur de la base de données
+        cur.execute("""DELETE FROM appareils WHERE appareil = ?""", (appareil,))
+        result = "Appareil {} supprimé de la base de données".format(appareil)
+        print("[INFO] {} avec succès".format(result))
+
+    except:
+        result = "Impossible de supprimer l'appareil " + appareil
+        print("[ERROR] Échec lors de la suppression de l'appareil")
 
     # Fermeture de la base de données
     finally:

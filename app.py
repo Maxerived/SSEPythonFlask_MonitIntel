@@ -143,6 +143,7 @@ def admin():
         nivs_resp=[""] + data['nivs_resp'],
         types_for_poste=types_app + ["TOUS"],
         utilisateurs=data["utilisateurs"][1:],
+        appareils=data["appareils"],
         error=session.get("error")
     )
 
@@ -205,6 +206,18 @@ def add_device():
     return redirect(url_for("admin"))
 
 
+@app.route("/admin/delete_device", methods=["POST"])
+@admin_required
+def delete_device():
+    """Fonction pour supprimer un appareil de la base de données"""
+
+    session["error"] = del_device(
+        request.form["appareil"]
+    )
+
+    return redirect(url_for("admin"))
+
+
 @app.route("/admin/add_post_type", methods=["POST"])
 @admin_required
 def add_post_type():
@@ -215,6 +228,22 @@ def add_post_type():
         request.form["niv_resp"],
         request.form.getlist('type_for_poste')
     )
+
+    return redirect(url_for("admin"))
+
+
+@app.route("/admin/change_admin_password", methods=["POST"])
+@admin_required
+def change_admin_password():
+
+    if request.method == "POST":
+
+        session['error'] = change_psw(
+            "admin",
+            request.form['new_psw'],
+            request.form['new_psw2'],
+            request.form['input_psw']
+        )
 
     return redirect(url_for("admin"))
 

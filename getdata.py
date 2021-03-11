@@ -71,6 +71,13 @@ def get_fields_data():
     for utilisateur in res:
         utilisateurs.append(utilisateur[0])
 
+    appareils = []
+    cur.execute("""SELECT appareil FROM appareils""")
+    res = cur.fetchall()
+    for appareil in res:
+        appareils.append(appareil[0])
+    print (appareils)
+
     # Fermeture de la base de données
     cur.close()
     conn.close()
@@ -84,7 +91,8 @@ def get_fields_data():
         "types" : types,
         "types_descr" : types_descr,
         "nivs_resp" : nivs_resp,
-        "utilisateurs" : utilisateurs
+        "utilisateurs" : utilisateurs,
+        "appareils" : appareils
     }
 
 

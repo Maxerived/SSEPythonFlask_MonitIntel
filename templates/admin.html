@@ -36,8 +36,14 @@
                 <li class="nav-item" onclick="openForm(event, 'adddevice')">
                     <a class="nav-link tablinks" href="#adddevice">Ajouter un appareil</a>
                 </li>
+                <li class="nav-item" onclick="openForm(event, 'deldevice')">
+                    <a class="nav-link tablinks" href="#deldevice">Supprimer un appareil</a>
+                </li>
                 <li class="nav-item" onclick="openForm(event, 'addposttype')">
                     <a class="nav-link tablinks" href="#addposttype">Ajouter un type de poste</a>
+                </li>
+                <li class="nav-item" onclick="openForm(event, 'changeadminpsw')">
+                    <a class="nav-link tablinks" href="#changeadminpsw">Mot de passe admin</a>
                 </li>
             </ul>
             <button class="btn btn-outline-danger my-2 my-sm-0"
@@ -115,7 +121,7 @@
                 <div class="col-6">
                     <label for="uname"><b>Identifiant utilisateur</b></label>
                     <br>
-                    <select class="form-control" name="uname" id="deluser-user">
+                    <select class="form-control" name="uname" id="deluser">
                         {% for utilisateur in utilisateurs %}
                         <option value="{{utilisateur}}">{{utilisateur}}</option>
                         {% endfor %}
@@ -149,7 +155,7 @@
                 <br>
                 <input class="form-control" type="password" name="new_psw" required>
                 <br>
-                <label for="new_psw2"><b>Nouveau mot de passe</b></label>
+                <label for="new_psw2"><b>Confirmez le nouveau mot de passe</b></label>
                 <br>
                 <input class="form-control" type="password" name="new_psw2" required>
                 <br>
@@ -219,6 +225,31 @@
         </form>
     </div>
 
+    <div id="deldevice" class="tabcontent">
+        <form action="/admin/delete_device" method="post">
+            <div class="row">
+                <div class="col-6">
+                    <label for="appareil"><b>Appareil</b></label>
+                    <br>
+                    <select class="form-control" name="appareil" id="deldevice">
+                        {% for appareil in appareils %}
+                        <option value="{{appareil}}">{{appareil}}</option>
+                        {% endfor %}
+                    </select>
+                    <br>
+                </div>
+                <div class="col-10 error">
+                    {% if error %}
+                    <strong>Info :</strong> {{ error }}
+                    {% endif %}
+                </div>
+                <div class="col-4">
+                    <button class="btn btn-success" type="submit">Supprimer</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
     <div id="addposttype" class="tabcontent">
         <form action="/admin/add_post_type" method="post">
             <div class="row">
@@ -257,6 +288,33 @@
             </div>
         </form>
     </div>
+
+    <div id="changeadminpsw" class="tabcontent">
+        <div class="form">
+            <form action="/admin/change_admin_password" method="post">
+                <label for="input_psw"><b>Mot de passe actuel</b></label>
+                <br>
+                <input class="form-control" type="password" name="input_psw" required>
+                <br>
+                <label for="new_psw"><b>Nouveau mot de passe</b></label>
+                <br>
+                <input class="form-control" type="password" name="new_psw" required>
+                <br>
+                <label for="new_psw2"><b>Confirmez le nouveau mot de passe</b></label>
+                <br>
+                <input class="form-control" type="password" name="new_psw2" required>
+                <br>
+                <div class="col-10 error">
+                    {% if error %}
+                    <strong>Info :</strong> {{ error }}
+                    {% endif %}
+                </div>
+                <br>
+                <button class="btn btn-success" type="submit">Valider</button>
+            </form>
+        </div>
+    </div>
+
 </body>
 
 </html>
