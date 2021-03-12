@@ -2,15 +2,16 @@ import sqlite3
 from login import *
 
 
-def change_psw(identifiant, input_psw, new_psw, new_psw2):
-    """Fonction qui premet de modifier un mot de passe
-    dans la base de données utilisateurs"""
+def change_psw(identifiant, new_psw, new_psw2, current_psw=None):
+    """Fonction qui permet à un utilisateur lambda de modifier
+    son mot de passedans la base de données utilisateurs"""
 
     # Vérification du mot de passe actuel
-    result = check_credentials(identifiant, input_psw)
+    if current_psw is not None or identifiant is "admin":
+        result = check_credentials(identifiant, current_psw)
 
     # Si le mot de pase actuel entré est correct
-    if result is "OK":
+    if current_psw is None or result is "OK":
         
         # Si les deux nouveaux mots de passe sont différents
         if new_psw != new_psw2:
@@ -33,7 +34,9 @@ def change_psw(identifiant, input_psw, new_psw, new_psw2):
                 )
 
                 print("[INFO] Mot de passe modifié avec succès")
-                result = "Le mot de passe a été modifié avec succès"
+                result = "Le mot de passe de l'utilisateur {} a été modifié avec succès".format(
+                    identifiant
+                )
 
             except:
                 result = "Une erreur est survenue lors du changement du mot de passe"
@@ -45,7 +48,6 @@ def change_psw(identifiant, input_psw, new_psw, new_psw2):
                 print("[INFO] Connexion SQlite fermée")
 
     return result
-
 
 
 def new_user(identifiant, mdp, site, chaine, ligne, poste):
@@ -156,6 +158,34 @@ def new_device(appareil, type_app, site, chaine, ligne):
     return result
 
 
+def del_device(appareil):
+    """Fonction qui supprime un appareil de la base de données"""
+
+    try:
+        # Connexion à la base de données
+        conn = sqlite3.connect("profils_utilisateurs.db")
+        cur = conn.cursor()
+        print("[INFO] Connexion réussie à SQLite")
+
+        # Suppresion de l'utilisateur de la base de données
+        cur.execute("""DELETE FROM appareils WHERE appareil = ?""", (appareil,))
+        result = "Appareil {} supprimé de la base de données".format(appareil)
+        print("[INFO] {} avec succès".format(result))
+
+    except:
+        result = "Impossible de supprimer l'appareil " + appareil
+        print("[ERROR] Échec lors de la suppression de l'appareil")
+
+    # Fermeture de la base de données
+    finally:
+        cur.close()
+        conn.commit()
+        conn.close()
+        print("[INFO] Connexion SQlite fermée")
+
+    return result
+
+
 def new_post_type(poste, niv_resp, type_for_poste):
     """Fonction qui ajoute un nouveau type d'appareil"""
 
@@ -196,5 +226,5 @@ def new_post_type(poste, niv_resp, type_for_poste):
 
 
 
-    
+
 
