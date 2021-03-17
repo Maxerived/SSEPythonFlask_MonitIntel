@@ -42,6 +42,11 @@
 
     <div id="tab-dashboard" class="tabcontent">
         <div class="left">
+            <div class="error">
+                {% if error %}
+                <strong>Info :</strong> {{ error }}
+                {% endif %}
+            </div>
             {% for appareil in appareils %}
             <div class="graph-container" id=container-{{appareil}}>
                 <canvas id={{appareil}} class="graph"></canvas>

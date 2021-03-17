@@ -33,8 +33,8 @@ function updateChart(canvasElements) {
                     config[appareil].data.datasets[0].backgroundColor.push('rgb(255, 99, 132)');
                     config[appareil].data.datasets[0].borderColor.push('rgb(255, 99, 132)');
                     //affiche une alerte dans historique
-                    value=config[appareil].data.datasets[0].data[0];
-                    showAlert(appareil,value);
+                    value = config[appareil].data.datasets[0].data[0];
+                    showAlert(appareil, value);
                 }
                 else if (data[appareil].anomaly === 'null') {
                     config[appareil].data.datasets[0].backgroundColor.push('rgb(0, 0, 0)');
@@ -136,10 +136,33 @@ function openTab(evt, id) {
     for (i = 0; i < navitem.length; i++) {
         navitem[i].className = navitem[i].className.replace(" active", "");
     }
-    document.getElementById("tab-"+id).style.display = "block";
+    document.getElementById("tab-" + id).style.display = "block";
     evt.currentTarget.className += " active";
 }
 
-function showAlert(appareil,value){
-    //alert(`Anomalies : ${appareil} values ${value}`);
+function showAlert(appareil, value) {
+    // Vérifions si le navigateur prend en charge les notifications
+    if (!('Notification' in window)) {
+        alert('Ce navigateur ne prend pas en charge la notification de bureau')
+    }
+
+    // Vérifions si les autorisations de notification ont déjà été accordées
+    else if (Notification.permission === 'granted') {
+        // Si tout va bien, créons une notification
+        const notification = new Notification('Anomalies : ' + appareil + ' values ' + value)
+    }
+
+    // Sinon, nous devons demander la permission à l'utilisateur
+    else if (Notification.permission !== 'denied') {
+        Notification.requestPermission().then((permission) => {
+            // Si l'utilisateur accepte, créons une notification
+            if (permission === 'granted') {
+                const notification = new Notification('Anomalies : ' + appareil + ' values ' + value)
+            }
+        })
+    }
+
+    // Enfin, si l'utilisateur a refusé les notifications, et que vous
+    // voulez être respectueux, il n'est plus nécessaire de les déranger.
+
 }
