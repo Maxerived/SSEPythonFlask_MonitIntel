@@ -76,7 +76,6 @@ def get_fields_data():
     res = cur.fetchall()
     for appareil in res:
         appareils.append(appareil[0])
-    print (appareils)
 
     # Fermeture de la base de données
     cur.close()

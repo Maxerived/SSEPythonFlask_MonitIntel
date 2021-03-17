@@ -88,14 +88,14 @@ function setConfig(canvasElements) {
                         display: true,
                         scaleLabel: {
                             display: true,
-                            labelString: 'Time',
+                            labelString: 'Date & heure',
                         }
                     }],
                     yAxes: [{
                         display: true,
                         scaleLabel: {
                             display: true,
-                            labelString: 'Value',
+                            labelString: 'Valeur',
                         }
                     }]
                 }
@@ -153,7 +153,7 @@ function showAlert(appareil, value) {
     // Vérifions si les autorisations de notification ont déjà été accordées
     else if (Notification.permission === 'granted') {
         // Si tout va bien, créons une notification
-        const notification = new Notification('Anomalies : ' + appareil + ' values ' + value)
+        const notification = new Notification('Anomalie sur ' + appareil + ' -> valeur : ' + value)
     }
 
     // Sinon, nous devons demander la permission à l'utilisateur
@@ -161,7 +161,7 @@ function showAlert(appareil, value) {
         Notification.requestPermission().then((permission) => {
             // Si l'utilisateur accepte, créons une notification
             if (permission === 'granted') {
-                const notification = new Notification('Anomalies : ' + appareil + ' values ' + value)
+                const notification = new Notification('Anomalie sur ' + appareil + ' -> valeur : ' + value)
             }
         })
     }
