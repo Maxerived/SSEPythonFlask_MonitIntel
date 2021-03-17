@@ -4,7 +4,7 @@ html, body {
     background-repeat: repeat;
     height: 100%;
     font-family: 'Numans', sans-serif;
-    position:relative
+    position: relative
 }
 
 .navbar {
@@ -23,15 +23,15 @@ html, body {
     margin: 30px;
 }
 
-.right{
+.right {
     width: 25%;
 }
 
-.left{
+.left {
     width: 70%;
 }
 
-.top{
+.top {
     position: absolute;
     top: 40px;
     right: 0;
@@ -40,7 +40,7 @@ html, body {
     margin: 30px;
 }
 
-.form{
+.form {
     height: auto;
     background: rgba(255, 255, 255, 0.9);
     padding: 30px;
@@ -49,4 +49,21 @@ html, body {
 
 .error {
     color: red;
+}
+
+.historique {
+    height: auto;
+    background: rgba(255, 255, 255, 0.9);
+    align-content: center;
+    height: auto;
+    width: 60%;
+    margin-top: 40px;
+    margin-bottom: auto;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 30px;
+}
+
+table, td, th {
+    border: 1px solid black;
 }

@@ -13,8 +13,11 @@ function updateChart(canvasElements) {
     source.onmessage = function (event) {
         const data = JSON.parse(event.data);
         for (var i = 0; i < canvasElements.length; i++) {
-            appareil = canvasElements[i].id;
-            if (data[appareil].time != "" && data[appareil].value != "") {
+            var appareil = canvasElements[i].id;
+            var time = data[appareil].time;
+            var value = data[appareil].value;
+
+            if (time != "" && value != "") {
                 if (config[appareil].data.labels.length === 100) {
                     config[appareil].data.labels.shift();
                     config[appareil].data.datasets[0].data.shift();
@@ -22,8 +25,8 @@ function updateChart(canvasElements) {
                     config[appareil].data.datasets[0].backgroundColor.shift();
                 }
 
-                config[appareil].data.labels.push(data[appareil].time);
-                config[appareil].data.datasets[0].data.push(data[appareil].value);
+                config[appareil].data.labels.push(time);
+                config[appareil].data.datasets[0].data.push(value);
 
                 if (data[appareil].anomaly === 'false') {
                     config[appareil].data.datasets[0].backgroundColor.push('rgb(54, 240, 92)');
@@ -32,9 +35,10 @@ function updateChart(canvasElements) {
                 else if (data[appareil].anomaly === 'true') {
                     config[appareil].data.datasets[0].backgroundColor.push('rgb(255, 99, 132)');
                     config[appareil].data.datasets[0].borderColor.push('rgb(255, 99, 132)');
-                    //affiche une alerte dans historique
-                    value = config[appareil].data.datasets[0].data[0];
+                    //affiche une alerte
                     showAlert(appareil, value);
+                    //ajouter une ligne dans historique
+                    addHistorique(time, appareil, value);
                 }
                 else if (data[appareil].anomaly === 'null') {
                     config[appareil].data.datasets[0].backgroundColor.push('rgb(0, 0, 0)');
@@ -165,4 +169,22 @@ function showAlert(appareil, value) {
     // Enfin, si l'utilisateur a refusé les notifications, et que vous
     // voulez être respectueux, il n'est plus nécessaire de les déranger.
 
+}
+
+function addHistorique(time, appareil, value) {
+    // Find a <table> element with id="myTable":
+    var table = document.getElementById("table-historique");
+
+    // Create an empty <tr> element and add it to the 1st position of the table:
+    var row = table.insertRow(1);
+
+    // Insert new cells (<td> elements) in the "new" <tr> element:
+    var cell1 = row.insertCell(0);
+    var cell2 = row.insertCell(1);
+    var cell3 = row.insertCell(2);
+
+    // Add some text to the new cells:
+    cell1.innerHTML = time;
+    cell2.innerHTML = appareil;
+    cell3.innerHTML = value;
 }
