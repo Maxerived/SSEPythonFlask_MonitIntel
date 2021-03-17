@@ -71,12 +71,29 @@ def get_fields_data():
     for utilisateur in res:
         utilisateurs.append(utilisateur[0])
 
+    appareils = []
+    cur.execute("""SELECT appareil FROM appareils""")
+    res = cur.fetchall()
+    for appareil in res:
+        appareils.append(appareil[0])
+    print (appareils)
+
     # Fermeture de la base de données
     cur.close()
     conn.close()
     print("[INFO] Connexion SQlite fermée")
 
-    return [postes, sites, chaines, lignes, types, types_descr, nivs_resp, utilisateurs]
+    return {
+        "postes": postes,
+        "sites" : sites,
+        "chaines" : chaines,
+        "lignes" : lignes,
+        "types" : types,
+        "types_descr" : types_descr,
+        "nivs_resp" : nivs_resp,
+        "utilisateurs" : utilisateurs,
+        "appareils" : appareils
+    }
 
 
 def get_seen_devices(username):

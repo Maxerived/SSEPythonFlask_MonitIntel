@@ -56,7 +56,10 @@ def login():
 
     if request.method == "POST":
 
-        result = check_credentials(request.form["uname"], request.form["psw"])
+        result = check_credentials(
+            request.form["uname"],
+            request.form["psw"]
+        )
 
         # Si les credntials sont incorrects
         if result is not "OK":
@@ -89,7 +92,10 @@ def index():
 
     session["appareils"] = get_seen_devices(session["username"])
 
-    return dict(appareils=session["appareils"], username=session["username"])
+    return dict(
+        appareils=session["appareils"],
+        username=session["username"]
+    )
 
 
 @app.route("/change_password", methods=["POST"])
@@ -99,14 +105,18 @@ def change_password():
 
     if request.method == "POST":
 
-        result = change_psw(session["username"],
-                            request.form['input_psw'],
-                            request.form['new_psw'],
-                            request.form['new_psw2'])
+        result = change_psw(
+            session["username"],
+            request.form['new_psw'],
+            request.form['new_psw2'],
+            request.form['input_psw']
+        )
 
-        return dict(appareils=session["appareils"],
-                    username=session["username"],
-                    error=result)
+        return dict(
+            appareils=session["appareils"],
+            username=session["username"],
+            error=result
+        )
 
 
 @app.route("/admin", methods=["GET"])
@@ -117,23 +127,25 @@ def admin():
     # Recupération des données à insérer dans les menus déroulants
 
     data = get_fields_data()
-    types = [""] + data[4]
-    types_descr = [""] + data[5]
+    types = [""] + data["types"]
+    types_descr = [""] + data["types_descr"]
     
     types_app = [""]
     for i in range(1, len(types)):
         types_app.append(types[i] + "_" + types_descr[i])
 
-    return dict(postes=[""] + data[0],
-                sites=data[1],
-                chaines=data[2],
-                lignes=[""] + data[3],
-                types=types_app,
-                nivs_resp=[""] + data[6],
-                types_for_poste=types_app + ["TOUS"],
-                utilisateurs=data[7][1:],
-                error=session.get("error")
-                )
+    return dict(
+        postes=[""] + data["postes"],
+        sites=data["sites"],
+        chaines=data["chaines"],
+        lignes=[""] + data["lignes"],
+        types=types_app,
+        nivs_resp=[""] + data['nivs_resp'],
+        types_for_poste=types_app + ["TOUS"],
+        utilisateurs=data["utilisateurs"][1:],
+        appareils=data["appareils"],
+        error=session.get("error")
+    )
 
 
 @app.route("/admin/add_user", methods=["POST"])
@@ -163,6 +175,21 @@ def delete_user():
     return redirect(url_for("admin"))
 
 
+@app.route("/admin/change_password", methods=["POST"])
+@admin_required
+def change_user_password():
+
+    if request.method == "POST":
+
+        session['error'] = change_psw(
+            request.form['username'],
+            request.form['new_psw'],
+            request.form['new_psw2']
+        )
+
+    return redirect(url_for("admin"))
+
+
 @app.route("/admin/add_device", methods=["POST"])
 @admin_required
 def add_device():
@@ -179,6 +206,18 @@ def add_device():
     return redirect(url_for("admin"))
 
 
+@app.route("/admin/delete_device", methods=["POST"])
+@admin_required
+def delete_device():
+    """Fonction pour supprimer un appareil de la base de données"""
+
+    session["error"] = del_device(
+        request.form["appareil"]
+    )
+
+    return redirect(url_for("admin"))
+
+
 @app.route("/admin/add_post_type", methods=["POST"])
 @admin_required
 def add_post_type():
@@ -189,6 +228,22 @@ def add_post_type():
         request.form["niv_resp"],
         request.form.getlist('type_for_poste')
     )
+
+    return redirect(url_for("admin"))
+
+
+@app.route("/admin/change_admin_password", methods=["POST"])
+@admin_required
+def change_admin_password():
+
+    if request.method == "POST":
+
+        session['error'] = change_psw(
+            "admin",
+            request.form['new_psw'],
+            request.form['new_psw2'],
+            request.form['input_psw']
+        )
 
     return redirect(url_for("admin"))
 
