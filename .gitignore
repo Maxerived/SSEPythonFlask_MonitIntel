@@ -7,10 +7,8 @@ __pycache__/login.cpython-39.pyc
 __pycache__/send_data.cpython-39.pyc
 .DS_Store
 __pycache__/getdata.cpython-39.pyc
-<<<<<<< HEAD
-__pycache__/ping.cpython-39.pyc
-=======
 
 __pycache__/getdata.cpython-38.pyc
 __pycache__/app.cpython-38.pyc
->>>>>>> 43ceabe14fb397bd8518e2e9c69a4a0dc150c7e4
+__pycache__/functions.cpython-38.pyc
+__pycache__/login.cpython-38.pyc

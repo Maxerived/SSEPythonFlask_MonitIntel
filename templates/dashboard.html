@@ -42,6 +42,11 @@
 
     <div id="tab-dashboard" class="tabcontent">
         <div class="left">
+            <div class="error">
+                {% if error %}
+                <strong>Info :</strong> {{ error }}
+                {% endif %}
+            </div>
             {% for appareil in appareils %}
             <div class="graph-container" id=container-{{appareil}}>
                 <canvas id={{appareil}} class="graph"></canvas>
@@ -62,7 +67,19 @@
     </div>
 
     <div id="tab-historique" class="tabcontent">
-
+        <div class="historique">
+            <table id="table-historique">
+                <thead>
+                    <tr>
+                        <th>Heure</th>
+                        <th>Appareil</th>
+                        <th>Valeur</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <div id="tab-changepsw" class="tabcontent">
