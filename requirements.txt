@@ -1,11 +1,5 @@
-Flask==1.1.2
-dash==1.18.1
-requests==2.25.0
-plotly==4.14.1
 Pypubsub==4.0.3
-sseclient_py==1.7
-dash_core_components==1.14.1
-dash_html_components==1.1.1
+Flask==1.1.2
 pubsub==0.1.2
+python_dateutil==2.8.1
 secrets==1.0.2
-sseclient==0.0.27
