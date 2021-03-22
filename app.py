@@ -232,6 +232,18 @@ def add_post_type():
     return redirect(url_for("admin"))
 
 
+@app.route("/admin/delete_post_type", methods=["POST"])
+@admin_required
+def delete_post_type():
+    """Fonction pour supprimer un poste de la base de données"""
+
+    session["error"] = del_post_type(
+        request.form["poste"]
+    )
+
+    return redirect(url_for("admin"))
+
+
 @app.route("/admin/change_admin_password", methods=["POST"])
 @admin_required
 def change_admin_password():
@@ -289,7 +301,7 @@ def chart_data():
                 iter += 1
                 json_data = json.dumps(data)
                 yield f"data:{json_data}\n\n"
-                time.sleep(1 / (2 * quelen * acc_fact))
+                time.sleep(1 / (2 * QUELEN * ACC_FACT))
 
             else:
 
@@ -315,7 +327,7 @@ def chart_data():
 
                 json_data = json.dumps(data)
                 yield f"data:{json_data}\n\n"
-                time.sleep(1 / acc_fact)
+                time.sleep(1 / ACC_FACT)
 
     return Response(generate_data(), mimetype="text/event-stream")
 

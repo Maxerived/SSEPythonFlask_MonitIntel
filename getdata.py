@@ -8,13 +8,13 @@ from concurrent.futures import ThreadPoolExecutor
 from pubsub import pub
 
 # Détermine le nombre de valeurs glissantes dans les deques X, Y et Z
-quelen = 100
+QUELEN = 100
 
 # Détermine le facteur d'accélération d'envoi des données
-acc_fact = 1
+ACC_FACT = 1
 
 # Détermine le nombre de données envoyées
-nb_data = 2000
+NB_DATA = 2000
 
 
 def get_fields_data():
@@ -76,7 +76,6 @@ def get_fields_data():
     res = cur.fetchall()
     for appareil in res:
         appareils.append(appareil[0])
-    print (appareils)
 
     # Fermeture de la base de données
     cur.close()
@@ -189,17 +188,17 @@ def send_appdata_after(delay, app, app_data):
     pub.sendMessage(app, topic = app, data = app_data)
     
 
-def send_data(app_data, app, nb_data, time_before_sending):
+def send_data(app_data, app, NB_DATA, time_before_sending):
 
-    time.sleep(time_before_sending / acc_fact)
+    time.sleep(time_before_sending / ACC_FACT)
 
     date_time = [None, None]
     date_time[0] = dateutil.parser.parse(app_data[0][:-1].split(',')[0])
     send_appdata_after(0, app, app_data[0][:-1])
 
-    for i in range(1, nb_data):
+    for i in range(1, NB_DATA):
         date_time[1] = dateutil.parser.parse(app_data[i][:-1].split(',')[0])
-        sleep_time = (date_time[1] - date_time[0]).seconds / acc_fact
+        sleep_time = (date_time[1] - date_time[0]).seconds / ACC_FACT
         date_time[0] = date_time[1]
         send_appdata_after(sleep_time, app, app_data[i][:-1])
 
@@ -217,7 +216,7 @@ for appareil in appareils:
 for appareil in new_apps:
     if appareil not in appareils:
         for K in [X, Y, Z]:
-            K[appareil] = deque(maxlen = quelen)
+            K[appareil] = deque(maxlen = QUELEN)
 appareils = new_apps
 
 
@@ -234,13 +233,13 @@ for appareil in appareils:
         filetail_time = dateutil.parser.parse(data[appareil][-1].split(',')[0])
         if filetail_time < filehead_time:
             data[appareil].reverse()
-            if len(data[appareil]) < nb_data:
+            if len(data[appareil]) < NB_DATA:
                 data[appareil] = data[appareil][:-1]
-            data[appareil] = data[appareil][:-1][:nb_data]
+            data[appareil] = data[appareil][:-1][:NB_DATA]
         elif filetail_time > filehead_time:
-            if len(data[appareil]) < nb_data:
+            if len(data[appareil]) < NB_DATA:
                 data[appareil] = data[appareil][1:]
-            data[appareil] = data[appareil][1:][:nb_data]
+            data[appareil] = data[appareil][1:][:NB_DATA]
     if appareil in apps and not os.path.isfile(filepath):
         data.pop(appareil)
         apps.remove(appareil)
@@ -259,11 +258,11 @@ time_sorted_list = [time_sorted_tuples[i][0] for i in range(len(time_sorted_tupl
 # l'horaire de la première donnée du capteur
 sending_time = min([time_sorted_tuples[i][1] for i in range(len(time_sorted_tuples))])
 executor = ThreadPoolExecutor(len(apps))
-executor.submit(send_data, data[time_sorted_list[0]], time_sorted_list[0], nb_data, 0)
+executor.submit(send_data, data[time_sorted_list[0]], time_sorted_list[0], NB_DATA, 0)
 print("[INFO] Connexion au capteur", time_sorted_list[0])
 for app in time_sorted_list[1:]:
     sleep_time = (sending_times[app] - sending_time).seconds
-    executor.submit(send_data, data[app], app, nb_data, sleep_time)
+    executor.submit(send_data, data[app], app, NB_DATA, sleep_time)
     print("[INFO] Connexion au capteur", app)
     sending_time = sending_times[app]
 
