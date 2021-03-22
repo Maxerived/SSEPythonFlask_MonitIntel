@@ -42,6 +42,9 @@
                 <li class="nav-item" onclick="openForm(event, 'addposttype')">
                     <a class="nav-link tablinks" href="#addposttype">Ajouter un type de poste</a>
                 </li>
+                <li class="nav-item" onclick="openForm(event, 'delposttype')">
+                    <a class="nav-link tablinks" href="#delposttype">Supprimer un type de poste</a>
+                </li>
                 <li class="nav-item" onclick="openForm(event, 'changeadminpsw')">
                     <a class="nav-link tablinks" href="#changeadminpsw">Mot de passe admin</a>
                 </li>
@@ -284,6 +287,31 @@
                 </div>
                 <div class="col-2">
                     <button class="btn btn-success" type="submit">Ajouter</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div id="delposttype" class="tabcontent">
+        <form action="/admin/delete_posttype" method="post">
+            <div class="row">
+                <div class="col-6">
+                    <label for="poste"><b>Poste</b></label>
+                    <br>
+                    <select class="form-control" name="poste" id="delposttype">
+                        {% for poste in postes %}
+                        <option value="{{poste[0]}}">{{poste[0]}}</option>
+                        {% endfor %}
+                    </select>
+                    <br>
+                </div>
+                <div class="col-10 error">
+                    {% if error %}
+                    <strong>Info :</strong> {{ error }}
+                    {% endif %}
+                </div>
+                <div class="col-4">
+                    <button class="btn btn-success" type="submit">Supprimer</button>
                 </div>
             </div>
         </form>

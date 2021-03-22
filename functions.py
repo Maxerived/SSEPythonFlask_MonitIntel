@@ -224,6 +224,32 @@ def new_post_type(poste, niv_resp, type_for_poste):
     return result
 
 
+def del_post_type(poste):
+    """Fonction qui supprime un type de poste de la base de données"""
+
+    try:
+        # Connexion à la base de données
+        conn = sqlite3.connect("profils_utilisateurs.db")
+        cur = conn.cursor()
+        print("[INFO] Connexion réussie à SQLite")
+
+        # Suppresion de l'utilisateur de la base de données
+        cur.execute("""DELETE FROM postes WHERE poste = ?""", (poste,))
+        result = "Poste {} supprimé de la base de données".format(poste)
+        print("[INFO] {} avec succès".format(result))
+
+    except:
+        result = "Impossible de supprimer le poste " + poste
+        print("[ERROR] Échec lors de la suppression du poste")
+
+    # Fermeture de la base de données
+    finally:
+        cur.close()
+        conn.commit()
+        conn.close()
+        print("[INFO] Connexion SQlite fermée")
+
+    return result
 
 
 
