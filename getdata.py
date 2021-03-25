@@ -18,16 +18,19 @@ NB_DATA = 2000
 
 
 def get_fields_data():
+    """Fonction sui permet de récupérer toutes les données nécessaires
+    pour générer des options sur la page admin pour faciliter le travail
+    de l'administrateur"""
 
     # Connexion à la base de données
     conn = sqlite3.connect("profils_utilisateurs.db")
     cur = conn.cursor()
     print("[INFO] Connexion réussie à SQLite")
 
-    # Récupération des données
+    # Récupération des données utiles
     postes = []
     cur.execute("SELECT poste,niveau_de_responsabilite FROM postes")
-    postes = cur.fetchall()
+    postes = list(set(cur.fetchall())) # Suppression des doublons
 
     sites = []
     cur.execute("SELECT site FROM sites")
@@ -48,16 +51,10 @@ def get_fields_data():
         lignes.append(ligne[0])
     
     types = []
-    cur.execute("SELECT type_appareil FROM types_appareil")
+    cur.execute("SELECT type_appareil,description FROM types_appareil")
     res = cur.fetchall()
     for type_appareil in res:
-        types.append(type_appareil[0])
-    
-    types_descr = []
-    cur.execute("SELECT description FROM types_appareil")
-    res = cur.fetchall()
-    for type_descr in res:
-        types_descr.append(type_descr[0])
+        types.append(type_appareil[0] + "_" + type_appareil[1])
     
     nivs_resp = []
     cur.execute("SELECT niv_resp FROM niveau_resp")
@@ -88,7 +85,6 @@ def get_fields_data():
         "chaines" : chaines,
         "lignes" : lignes,
         "types" : types,
-        "types_descr" : types_descr,
         "nivs_resp" : nivs_resp,
         "utilisateurs" : utilisateurs,
         "appareils" : appareils
@@ -96,7 +92,10 @@ def get_fields_data():
 
 
 def get_seen_devices(username):
+    """Fonction qui permet de récupérer le nom des appareils
+    auxquels l'utilisateur en entrée a accès"""
 
+    # Connexion à la base de données
     conn = sqlite3.connect("profils_utilisateurs.db")
     cur = conn.cursor()
     print("[INFO] Connexion réussie à SQLite")
@@ -119,19 +118,21 @@ def get_seen_devices(username):
         WHERE poste = ?",
         (poste,),
     )
-    res = cur.fetchall()[0]
-    niv_resp = res[0]
-    type_app = res[1] # type d'appareil(s) vu(s) par un utilisateur occupant le poste considéré
-    # Va falloir modifier si on réussit à séléctionner plusieurs appareils
+    res = cur.fetchall()
+    niv_resp = res[0][0]
     types_app = []
 
-    if type_app == "TOUS":
+    if res[0][1] == "TOUS":
         cur.execute("SELECT type_appareil FROM types_appareil")
         res = cur.fetchall()
         for type_a in res:
             types_app.append(type_a[0])
     else:
-        types_app.append(type_app)
+        i = 0
+        while i < len(res):
+            types_app.append(res[i][1])
+            print(types_app)
+            i += 1
 
     res = []
     for type_app in types_app:
@@ -160,6 +161,7 @@ def get_seen_devices(username):
             )
         res.append(cur.fetchall())
 
+    # Fermeture de la base de données
     cur.close()
     print("[INFO] Appareils de l'utilisateur {} récupérés".format(username))
     conn.close()
