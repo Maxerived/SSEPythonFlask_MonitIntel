@@ -6,8 +6,8 @@ Présentation du projet
 
 Installation
 ------------
-* Installer les packages ```$ pip install -r requirements.txt```
-* Initialiser le mot de passe de l'admin et la base de données ```python init_db.py```
+* Installer les packages ```$ pip3 install -r requirements.txt```
+* Initialiser le mot de passe de l'admin et la base de données ```python3 init_db.py```
 
 Pour lancer :
 ------

@@ -165,7 +165,7 @@ def admin():
         types=types_app,
         nivs_resp=[""] + data['nivs_resp'],
         types_for_poste=types_app + ["TOUS"],
-        utilisateurs=data["utilisateurs"][1:],
+        utilisateurs=[user for user in data["utilisateurs"] if user != "admin"],
         appareils=data["appareils"],
         error=session.get("error")
     )
